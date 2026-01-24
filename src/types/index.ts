@@ -10,6 +10,8 @@ export interface Product {
     tech_spec_pdf?: string;
     image_url: string;
     stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
+    stock: number;
+    popularity_score: number;
 }
 
 export interface Kit {
@@ -22,6 +24,7 @@ export interface Kit {
     description: string;
     image_url: string;
     stock?: number;
+    popularity_score?: number;
 }
 
 export interface Lead {

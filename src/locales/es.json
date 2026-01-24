@@ -15,12 +15,54 @@
     "nav": {
         "home": "Inicio",
         "products": "Productos",
-        "calculator": "Calculadora",
+        "map3d": "Mapa 3D",
+        "calculator": "Simulador",
         "installers": "Instaladores"
     },
     "hero": {
         "title": "Toma el control de tu <1>energía</1>",
         "subtitle": "Calcula tu ahorro en tiempo real y descubre el kit solar perfecto para tu hogar. Sin complicaciones técnicas."
+    },
+    "calculator": {
+        "title": "Simulador de Precisión",
+        "subtitle": "Ajusta el consumo para dimensionar el sistema fotovoltaico.",
+        "currentBill": "Factura Mensual Actual",
+        "sunHours": "Horas de Sol Diarias",
+        "disclaimer": "Cálculo basado en irradiación media anual y precio pool 0.20€/kWh.",
+        "financialProjection": "Proyección Financiera (TCO)",
+        "financingInstallment": "Cuota Financiación",
+        "estimatedSavings": "Ahorro Estimado",
+        "recommendedSystem": "Sistema Recomendado",
+        "tier1Panels": "Paneles Tier-1",
+        "installedPower": "Potencia total instalada",
+        "positiveCashFlow": "Cash Flow Positivo",
+        "netSavings": "Ahorro neto desde el primer mes",
+        "co2Saved": "CO2 Evitado / Año",
+        "trees": "Árboles Equivalentes",
+        "roi": "Retorno Inversión",
+        "bookStudy": "Reservar Estudio Gratuito",
+        "months": "/mes",
+        "years": "Años"
+    },
+    "installers": {
+        "badge": "Red Certificada",
+        "title": "Instaladores <1>Verificados</1>",
+        "desc": "No te preocupes por la instalación. Trabajamos con los mejores expertos de tu zona, auditados por nosotros.",
+        "count": "+500 Instaladores",
+        "rating": "Valoración Media",
+        "viewProfile": "Ver Perfil"
+    },
+    "dsm": {
+        "badge": "Tecnología DSM 2026",
+        "title": "Mapeo Solar <1>3D & AI</1>",
+        "desc": "Utilizamos <1>modelos digitales de superficie (DSM)</1> y algoritmos de visión por computador para calcular la irradiancia exacta de cada metro cuadrado de tu tejado.",
+        "features": {
+            "obstacles": "Modelado 3D de obstáculos y sombras",
+            "efficiency": "Cálculo de eficiencia por m²",
+            "optimalArea": "Selección automática del área óptima",
+            "locateMe": "Localízame",
+            "locating": "Localizando..."
+        }
     },
     "sections": {
         "featuredKits": "Kits Destacados",

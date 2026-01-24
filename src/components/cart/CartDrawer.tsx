@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Minus, Plus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { Button } from '../common/Button';
 
 export function CartDrawer() {
-    const { items, isOpen, toggleCart, removeItem, subtotal } = useCart();
+    const { items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useCart();
 
     return (
         <AnimatePresence>
@@ -62,10 +62,26 @@ export function CartDrawer() {
                                             <h3 className="font-bold text-white text-sm mb-1">{item.name}</h3>
                                             <p className="text-primary font-mono">{item.price.toLocaleString()}€</p>
                                             <div className="flex items-center justify-between mt-3">
-                                                <span className="text-xs text-slate-400">Cant: {item.quantity}</span>
+                                                <div className="flex items-center gap-3 bg-white/5 rounded-lg p-1">
+                                                    <button
+                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                        className="p-1 hover:text-white text-slate-400 transition-colors disabled:opacity-50"
+                                                        disabled={item.quantity <= 1}
+                                                    >
+                                                        <Minus className="w-3 h-3" />
+                                                    </button>
+                                                    <span className="text-xs font-mono w-4 text-center">{item.quantity}</span>
+                                                    <button
+                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                        className="p-1 hover:text-white text-slate-400 transition-colors"
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                                 <button
                                                     onClick={() => removeItem(item.id)}
                                                     className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                                    title="Eliminar"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>

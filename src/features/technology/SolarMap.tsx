@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, useMap, useMapEvents, Rectangle } from 'react-leaflet';
-import { Search, Map as MapIcon, Zap, Sun, Info, Loader2, ScanLine, BrainCircuit, Waves } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, useMap, useMapEvents, Rectangle, CircleMarker } from 'react-leaflet';
+import { Search, Zap, Sun, Info, Loader2, ScanLine, BrainCircuit, Waves, Maximize2, Minimize2, Plus, Minus, MousePointer2, ChevronDown, ChevronUp, X, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useImperativeHandle, forwardRef } from 'react';
 
 // Fix Leaflet generic marker icon
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -20,9 +21,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // --- Physics Engine ---
 const getPeakSunHours = (lat: number): number => {
-    // Simple approximation: closer to equator (0) = more sun.
-    // 40deg (Madrid) ~= 5.0h, 51deg (London) ~= 3.5h
-    const base = 6.5; // Max theoretical at equator
+    const base = 6.5;
     const deduction = Math.abs(lat) * 0.06;
     return Math.max(2, parseFloat((base - deduction).toFixed(2)));
 };
@@ -37,6 +36,88 @@ function FlyToLocation({ coords }: { coords: [number, number] | null }) {
         }
     }, [coords, map]);
     return null;
+}
+
+function MapResizer({ isFullscreen }: { isFullscreen: boolean }) {
+    const map = useMap();
+    useEffect(() => {
+        // Wait for transition to finish or pump updates
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 550); // > 500ms transition
+        return () => clearTimeout(timer);
+    }, [isFullscreen, map]);
+    return null;
+}
+
+function MapControls({
+    isFullscreen,
+    onToggleFullscreen,
+    hasStatsPanel,
+    onLocateMe,
+    isLocating
+}: {
+    isFullscreen: boolean;
+    onToggleFullscreen: () => void;
+    hasStatsPanel: boolean;
+    onLocateMe: () => void;
+    isLocating: boolean;
+}) {
+    const map = useMap();
+
+    // Prevent map interaction when clicking controls
+    const stopProp = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+    };
+
+    return (
+        <div
+            className={`absolute right-6 z-[1000] flex flex-col gap-2 transition-all duration-300 ${hasStatsPanel ? 'bottom-48 sm:bottom-40' : 'bottom-6'}`}
+            onMouseDown={stopProp}
+            onDoubleClick={stopProp}
+            onClick={stopProp}
+        >
+            <div className="flex flex-col rounded-xl overflow-hidden shadow-xl border border-white/10 backdrop-blur-md bg-slate-900/90">
+                <button
+                    onClick={(e) => { stopProp(e); map.zoomIn(); }}
+                    className="p-3 hover:bg-white/10 text-white transition-colors border-b border-white/10"
+                    title="Acercar"
+                    type="button"
+                >
+                    <Plus className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={(e) => { stopProp(e); map.zoomOut(); }}
+                    className="p-3 hover:bg-white/10 text-white transition-colors"
+                    title="Alejar"
+                    type="button"
+                >
+                    <Minus className="w-5 h-5" />
+                </button>
+            </div>
+
+            <button
+                onClick={(e) => { stopProp(e); onLocateMe(); }}
+                className="p-3 rounded-xl shadow-xl border border-white/10 backdrop-blur-md bg-slate-900/90 hover:bg-white/10 text-white transition-colors"
+                title="Mi Ubicación"
+                type="button"
+                disabled={isLocating}
+            >
+                {isLocating ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Locate className="w-5 h-5" />}
+            </button>
+
+
+            <button
+                onClick={(e) => { stopProp(e); onToggleFullscreen(); }}
+                className="p-3 rounded-xl shadow-xl border border-white/10 backdrop-blur-md bg-slate-900/90 hover:bg-white/10 text-white transition-colors"
+                title={isFullscreen ? "Minimizar Mapa" : "Expandir Mapa"}
+                type="button"
+            >
+                {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </button>
+        </div>
+    );
 }
 
 function PanelPlacer({ onPlacePanel }: { onPlacePanel: (latlng: L.LatLng) => void }) {
@@ -57,23 +138,85 @@ interface Panel {
 export function SolarMap() {
     const [searchQuery, setSearchQuery] = useState('');
     const [center, setCenter] = useState<[number, number]>([40.4168, -3.7038]); // Madrid default
+    const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
     const [panels, setPanels] = useState<Panel[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
     const [mode, setMode] = useState<'view' | 'analyze' | 'place'>('view');
     const [analysisState, setAnalysisState] = useState<'idle' | 'scanning' | 'processing' | 'complete'>('idle');
     const [solarData, setSolarData] = useState<{ irradiance: number; quality: string } | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isStatsExpanded, setIsStatsExpanded] = useState(false); // Collapsed by default
+    const [isSearchOpen, setIsSearchOpen] = useState(false); // Collapsible search state
+    const mapWrapperRef = React.useRef<HTMLDivElement>(null);
+
+    // Sync fullscreen state with browser event
+    useEffect(() => {
+        const handleChange = () => {
+            const isFull = !!document.fullscreenElement;
+            setIsFullscreen(isFull);
+            setIsStatsExpanded(isFull); // Auto-expand on fullscreen, collapse on minimize
+        };
+        document.addEventListener('fullscreenchange', handleChange);
+        return () => document.removeEventListener('fullscreenchange', handleChange);
+    }, []);
+
+    const toggleFullscreen = async () => {
+        if (!mapWrapperRef.current) return;
+
+        if (!document.fullscreenElement) {
+            try {
+                await mapWrapperRef.current.requestFullscreen();
+            } catch (err) {
+                console.error("Error attempting to enable fullscreen:", err);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            }
+        }
+    };
 
     // Panel Specs
     const PANEL_WIDTH = 0.000018;
     const PANEL_HEIGHT = 0.000010;
 
+    const handleLocateMe = () => {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setCenter([latitude, longitude]);
+                setMarkerPosition([latitude, longitude]);
+                setIsLocating(false);
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                setIsLocating(false);
+                alert('No se pudo obtener tu ubicación. Por favor, verifica los permisos de tu navegador.');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    };
+
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!searchQuery) return;
         setLoading(true);
-        setAnalysisState('idle'); // Reset analysis on new search
+        setAnalysisState('idle');
         setSolarData(null);
-        setPanels([]); // Reset panels? Maybe better to keep them, but let's reset for clarity
+        setSolarData(null);
+        setPanels([]);
+        setMarkerPosition(null);
         setMode('view');
 
         try {
@@ -83,6 +226,7 @@ export function SolarMap() {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
                 setCenter([lat, lon]);
+                setMarkerPosition([lat, lon]);
             }
         } catch (error) {
             console.error("Search failed:", error);
@@ -94,28 +238,20 @@ export function SolarMap() {
     const startAnalysis = () => {
         setMode('analyze');
         setAnalysisState('scanning');
-
-        // Sequence: Scanning -> Processing -> Complete
         setTimeout(() => setAnalysisState('processing'), 3000);
-
         setTimeout(() => {
             const peakHours = getPeakSunHours(center[0]);
             let quality = 'Buena';
             if (peakHours > 5) quality = 'Excelente';
             if (peakHours < 3.5) quality = 'Moderada';
-
-            setSolarData({
-                irradiance: peakHours,
-                quality
-            });
+            setSolarData({ irradiance: peakHours, quality });
             setAnalysisState('complete');
-            setMode('place'); // Auto-switch to place mode after analysis
+            setMode('place');
         }, 5500);
     };
 
     const addPanel = (latlng: L.LatLng) => {
         if (mode !== 'place') return;
-
         const newPanel: Panel = {
             id: crypto.randomUUID(),
             center: [latlng.lat, latlng.lng],
@@ -128,28 +264,34 @@ export function SolarMap() {
     };
 
     // Calculations
-    const irradiance = solarData?.irradiance || getPeakSunHours(center[0]); // Fallback/Live calc
-    const panelPower = 0.45; // 450W
+    const irradiance = solarData?.irradiance || getPeakSunHours(center[0]);
+    const panelPower = 0.45;
     const totalPower = panels.length * panelPower;
-    // Annual Gen = Power * Irradiance(hours) * 365 * Efficiency(0.85 approx)
     const annualGeneration = Math.round(totalPower * irradiance * 365 * 0.85);
     const annualSavings = Math.round(annualGeneration * 0.15);
 
-    return (
-        <div className="relative w-full h-full bg-slate-900 rounded-3xl overflow-hidden border border-white/10 shadow-2xl group">
+    // Toggle scroll on body removed as native fullscreen handles it
 
-            {/* Map Container */}
+    return (
+        <div
+            ref={mapWrapperRef}
+            className={`relative transition-all duration-500 ease-in-out bg-slate-900 overflow-hidden border border-white/10 shadow-2xl group ${isFullscreen ? 'w-full h-full rounded-none border-0' : 'w-full h-full rounded-3xl'}`}
+        >
+
             <MapContainer
                 center={center}
-                zoom={18} // Start zoomed in for better analysis feel
+                zoom={18}
+                maxZoom={22}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
-                scrollWheelZoom={false} // Prevent accidental zoom while scrolling page
+                scrollWheelZoom={true}
                 doubleClickZoom={false}
             >
                 <TileLayer
                     attribution='Tiles &copy; Esri'
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    maxNativeZoom={19}
+                    maxZoom={22}
                 />
                 <TileLayer
                     url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png"
@@ -157,7 +299,15 @@ export function SolarMap() {
                 />
 
                 <FlyToLocation coords={center} />
+                <MapResizer isFullscreen={isFullscreen} />
                 <PanelPlacer onPlacePanel={addPanel} />
+                <MapControls
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={toggleFullscreen}
+                    hasStatsPanel={panels.length > 0}
+                    onLocateMe={handleLocateMe}
+                    isLocating={isLocating}
+                />
 
                 {panels.map((panel) => (
                     <Rectangle
@@ -166,9 +316,23 @@ export function SolarMap() {
                         pathOptions={{ color: '#22c55e', weight: 1, fillOpacity: 0.7 }}
                     />
                 ))}
+
+                {markerPosition && (
+                    <CircleMarker
+                        center={markerPosition}
+                        radius={8}
+                        pathOptions={{
+                            color: '#eab308', // yellow-500
+                            fillColor: 'transparent',
+                            weight: 2,
+                            opacity: 0.8,
+                            dashArray: '4, 4'
+                        }}
+                    />
+                )}
             </MapContainer>
 
-            {/* --- AI SCANNING OVERLAYS --- */}
+            {/* --- OVERLAYS --- */}
             <AnimatePresence>
                 {analysisState === 'scanning' && (
                     <motion.div
@@ -177,17 +341,14 @@ export function SolarMap() {
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 z-[400] pointer-events-none"
                     >
-                        {/* Scanning Beam */}
                         <motion.div
                             className="absolute left-0 w-full h-2 bg-primary/60 shadow-[0_0_40px_rgba(34,197,94,0.8)]"
                             animate={{ top: ['0%', '100%'] }}
                             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                         />
-                        {/* Grid Effect */}
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
                         <div className="absolute inset-0 border-[20px] border-primary/10" />
 
-                        {/* Status Text */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-md px-6 py-3 rounded-xl border border-primary/50 text-primary font-mono flex flex-col items-center gap-2">
                             <ScanLine className="w-8 h-8 animate-pulse" />
                             <span className="text-lg font-bold">ESCANEANDO DSM-LIDAR...</span>
@@ -196,7 +357,6 @@ export function SolarMap() {
                     </motion.div>
                 )}
 
-                {/* Heatmap Overlay (Result) */}
                 {(analysisState === 'complete' || mode === 'place') && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -206,123 +366,208 @@ export function SolarMap() {
                 )}
             </AnimatePresence>
 
+            {/* Search Bar */}
+            {/* Search Bar */}
+            <div className={`absolute left-4 z-[500] transition-all duration-300 ${isFullscreen ? 'top-8' : 'top-4'}`}>
+                <div className={`relative transition-all duration-300 ease-out flex items-center shadow-2xl bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden ${isSearchOpen || searchQuery ? 'w-[320px] sm:w-[500px]' : 'w-12 h-12'}`}>
 
-            {/* UI Overlay: Search Bar */}
-            <div className="absolute top-4 left-4 right-4 z-[500]">
-                <form onSubmit={handleSearch} className="relative shadow-2xl">
-                    <input
-                        type="text"
-                        placeholder="Introduce tu dirección completa..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-slate-900/95 backdrop-blur-md text-white border border-white/20 rounded-xl py-3 pl-12 pr-4 shadow-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
-                    />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    {loading && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                    <button
+                        type="button"
+                        onClick={() => setIsSearchOpen(!isSearchOpen)}
+                        className={`absolute left-0 top-0 h-12 w-12 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20 ${isSearchOpen || searchQuery ? 'bg-transparent' : 'bg-slate-900/95'}`}
+                    >
+                        <Search className="w-5 h-5" />
+                    </button>
+
+                    <form
+                        onSubmit={(e) => {
+                            handleSearch(e);
+                            // Keep expanded if searching, but maybe collapse if desired? User said "mantenga".
+                        }}
+                        className={`w-full h-full flex items-center transition-opacity duration-300 ${isSearchOpen || searchQuery ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    >
+                        <input
+                            type="text"
+                            placeholder="Introduce tu dirección completa..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSearchOpen(true)}
+                            className="w-full h-12 bg-transparent text-white pl-12 pr-10 focus:outline-none placeholder:text-slate-500 text-sm"
+                        />
+                        {loading && (
+                            <div className="absolute right-3">
+                                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                            </div>
+                        )}
+                        {searchQuery && !loading && (
+                            <button
+                                type="button"
+                                onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }}
+                                className="absolute right-3 text-slate-500 hover:text-white p-1"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </form>
+                </div>
+            </div>
+
+            {/* Main Controls Toolkit */}
+            {analysisState !== 'scanning' && (
+                <div className={`absolute left-4 z-[500] flex flex-col gap-3 transition-all duration-300 ${isFullscreen ? 'top-24' : 'top-20'}`}>
+
+                    {analysisState === 'idle' && (
+                        <button
+                            onClick={startAnalysis}
+                            title="Analizar Tejado con IA"
+                            className="flex items-center gap-3 px-6 h-14 rounded-xl backdrop-blur-md bg-yellow-500 text-slate-900 font-black shadow-lg shadow-yellow-500/20 hover:scale-105 hover:shadow-yellow-500/40 transition-all group/btn"
+                        >
+                            <BrainCircuit className="w-6 h-6 group-hover/btn:rotate-180 transition-transform duration-700" />
+                            <span className="text-sm uppercase tracking-wide">Analizar con IA</span>
+                        </button>
+                    )}
+
+                    {analysisState === 'complete' && (
+                        <div className="flex flex-col gap-2 p-1.5 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-xl shadow-xl w-fit">
+                            <button
+                                onClick={() => setMode('view')}
+                                title="Navegar Mapa"
+                                className={`p-2.5 rounded-lg transition-all ${mode === 'view' ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <MousePointer2 className="w-5 h-5" />
+                            </button>
+
+                            <button
+                                onClick={() => setMode('place')}
+                                title="Colocar Paneles"
+                                className={`p-2.5 rounded-lg transition-all ${mode === 'place' ? 'bg-primary text-secondary shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <Sun className="w-5 h-5" />
+                            </button>
                         </div>
                     )}
-                </form>
-            </div>
 
-            {/* UI Overlay: Analysis Controls */}
-            <div className="absolute top-20 left-4 z-[500] flex flex-col gap-2">
-                {analysisState === 'idle' && (
-                    <button
-                        onClick={startAnalysis}
-                        className="flex items-center gap-3 px-5 py-3 rounded-xl backdrop-blur-md bg-primary text-secondary font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform group/btn"
-                    >
-                        <BrainCircuit className="w-5 h-5 group-hover/btn:rotate-180 transition-transform duration-700" />
-                        <span>Analizar Tejado con IA</span>
-                    </button>
-                )}
-
-                {analysisState === 'complete' && (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setMode('place')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg backdrop-blur-md border transition-all ${mode === 'place' ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg' : 'bg-black/60 text-white border-white/10'}`}
-                        >
-                            <Sun className="w-4 h-4" />
-                            <span>Añadir Paneles</span>
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* UI Overlay: Tech HUD (Top Right) */}
-            {analysisState === 'complete' && solarData && (
-                <motion.div
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    className="absolute top-20 right-4 z-[500] w-64"
-                >
-                    <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl space-y-3">
-                        <div className="flex items-center gap-2 text-primary font-bold border-b border-white/10 pb-2">
-                            <Waves className="w-4 h-4" />
-                            <span>ANÁLISIS COMPLETADO</span>
+                    {mode === 'place' && (
+                        <div className="absolute left-14 top-0 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 text-xs text-white whitespace-nowrap animate-in fade-in slide-in-from-left-2 pointer-events-none">
+                            Haz clic para añadir paneles
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-                            <div>
-                                <div className="text-slate-500">IRRADIANCIA</div>
-                                <div className="text-white text-lg">{solarData.irradiance} <span className="text-[10px]">kWh/m²</span></div>
-                            </div>
-                            <div>
-                                <div className="text-slate-500">CALIDAD</div>
-                                <div className="text-emerald-400 text-lg">{solarData.quality}</div>
-                            </div>
-                            <div>
-                                <div className="text-slate-500">LATITUD</div>
-                                <div className="text-slate-300">{center[0].toFixed(4)}</div>
-                            </div>
-                            <div>
-                                <div className="text-slate-500">TEMP. SUP.</div>
-                                <div className="text-orange-400">~45°C</div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
+                    )}
+                </div>
             )}
 
-            {/* UI Overlay: Bottom Stats Bar */}
-            {panels.length > 0 && (
-                <div className="absolute bottom-6 left-4 right-4 z-[500]">
-                    <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Stats HUD */}
+            {analysisState === 'complete' && (
+                <>
+                    {/* Top Right Info */}
+                    {/* Top Right Info (Collapsible) */}
+                    <motion.div
+                        initial={{ x: 20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        className={`absolute right-4 z-[500] transition-all duration-300 flex flex-col items-end gap-2 ${isFullscreen ? 'top-24' : 'top-20'}`}
+                    >
+                        <button
+                            onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+                            className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 shadow-xl hover:bg-white/5 transition-colors"
+                        >
+                            <Waves className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-bold text-white">ANÁLISIS COMPLETADO</span>
+                            {isStatsExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                        </button>
 
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                                <Zap className="w-6 h-6 text-primary" />
-                            </div>
-                            <div>
-                                <div className="text-sm text-slate-400">Potencia del Sistema</div>
-                                <div className="text-2xl font-bold text-white leading-none">
-                                    {totalPower.toFixed(2)} <span className="text-sm font-normal text-slate-500">kWp</span>
+                        <AnimatePresence>
+                            {isStatsExpanded && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    style={{ overflow: 'hidden' }}
+                                >
+                                    <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl w-64 space-y-3">
+                                        <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                                            <div><div className="text-slate-500">IRRADIANCIA</div><div className="text-white text-lg">{solarData?.irradiance} <span className="text-[10px]">kWh/m²</span></div></div>
+                                            <div><div className="text-slate-500">CALIDAD</div><div className="text-emerald-400 text-lg">{solarData?.quality}</div></div>
+                                            <div><div className="text-slate-500">LATITUD</div><div className="text-slate-300">{center[0].toFixed(4)}</div></div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.div>
+
+                    {/* Bottom Stats Bar */}
+                    {/* Bottom Stats Bar */}
+                    {panels.length > 0 && (
+                        <div className={`absolute left-0 right-0 z-[5000] transition-all duration-300 ${isFullscreen ? 'bottom-8 px-8' : 'bottom-6 px-4'}`}>
+                            <div className={`${isFullscreen ? 'max-w-6xl' : 'max-w-4xl'} mx-auto bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden`}>
+                                <div className={`flex flex-col ${isFullscreen ? 'md:grid md:grid-cols-4 lg:grid-cols-6' : 'md:flex-row'} items-center justify-between gap-4 p-4 md:p-6`}>
+
+                                    {/* Standard Stats (Always Visible) */}
+                                    <div className={`flex items-center gap-4 ${isFullscreen ? 'col-span-2' : 'flex-1'}`}>
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                            <Zap className="w-6 h-6 text-primary" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm text-slate-400">Potencia del Sistema</div>
+                                            <div className="text-2xl font-bold text-white leading-none">
+                                                {totalPower.toFixed(2)} <span className="text-sm font-normal text-slate-500">kWp</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {!isFullscreen && <div className="hidden md:block w-px h-12 bg-white/10" />}
+
+                                    <div className={`flex items-center gap-4 ${isFullscreen ? 'col-span-2' : 'flex-1'}`}>
+                                        <div className="text-center md:text-left w-full">
+                                            <div className="text-sm text-slate-400">Producción Estimada</div>
+                                            <div className="text-xl font-bold text-white leading-none">
+                                                {annualGeneration.toLocaleString()} <span className="text-sm font-normal text-slate-500">kWh/año</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {!isFullscreen && <div className="hidden md:block w-px h-12 bg-white/10" />}
+
+                                    <div className={`flex items-center gap-4 ${isFullscreen ? 'col-span-2' : 'flex-1'}`}>
+                                        <div className="text-center md:text-left w-full">
+                                            <div className="text-sm text-slate-400">Ahorro Anual</div>
+                                            <div className="text-xl font-bold text-emerald-400 leading-none">
+                                                ~{annualSavings}€
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Extended Stats (Fullscreen Only) */}
+                                    {isFullscreen && (
+                                        <>
+                                            <div className="col-span-2 flex flex-col justify-center p-3 bg-white/5 rounded-xl border border-white/5">
+                                                <div className="text-xs text-slate-400 mb-1">Impacto Ambiental</div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-lg font-bold text-green-400">{(annualGeneration * 0.4).toFixed(0)} kg</div>
+                                                    <span className="text-[10px] text-slate-500">CO2 Ahorrado</span>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 flex flex-col justify-center p-3 bg-white/5 rounded-xl border border-white/5">
+                                                <div className="text-xs text-slate-400 mb-1">Retorno Inversión</div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-lg font-bold text-blue-400">~4.2</div>
+                                                    <span className="text-[10px] text-slate-500">Años (Estimado)</span>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 flex flex-col justify-center p-3 bg-white/5 rounded-xl border border-white/5">
+                                                <div className="text-xs text-slate-400 mb-1">Árboles Plantados</div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-lg font-bold text-emerald-400">{(annualGeneration / 200).toFixed(0)}</div>
+                                                    <span className="text-[10px] text-slate-500">Equivalentes</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="text-right md:text-left">
-                                <div className="text-sm text-slate-400">Producción Estimada</div>
-                                <div className="text-xl font-bold text-white leading-none">
-                                    {annualGeneration.toLocaleString()} <span className="text-sm font-normal text-slate-500">kWh/año</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="text-right md:text-left">
-                                <div className="text-sm text-slate-400">Ahorro Anual</div>
-                                <div className="text-xl font-bold text-emerald-400 leading-none">
-                                    ~{annualSavings}€
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+                    )}
+                </>
             )}
         </div>
     );

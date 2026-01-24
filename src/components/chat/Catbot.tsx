@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '../common/Button';
 import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
 
 interface Message {
     id: string;
@@ -47,17 +48,47 @@ export function Catbot() {
         setInputValue('');
         setIsTyping(true);
 
-        // Simulate AI Latency
-        setTimeout(() => {
-            const botResponse = getBotResponse(userMsg.text);
+        try {
+            // Prepare history for context
+            const history = messages.map(m => ({
+                role: m.sender === 'user' ? 'user' : 'assistant',
+                content: m.text
+            }));
+
+            // Call Supabase Edge Function
+            const { data, error } = await supabase.functions.invoke('chat-ai', {
+                body: { messages: [...history, { role: 'user', content: userMsg.text }] }
+            });
+
+            if (error) {
+                console.error('Supabase Function Error:', error);
+                throw error;
+            }
+
+            const botResponse = data.reply || "Miau... algo falló en mis circuitos solares. 😿";
+
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 text: botResponse,
                 sender: 'bot',
                 timestamp: new Date()
             }]);
+        } catch (error: any) {
+            console.error('Chat Error:', error);
+            const errorMessage = error.message || "Error desconocido";
+            const displayError = errorMessage === "Failed to fetch"
+                ? "No se pudo conectar con el servidor (¿está corriendo?). 🔌"
+                : `Error del servidor: ${errorMessage}`;
+
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                text: displayError,
+                sender: 'bot',
+                timestamp: new Date()
+            }]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -169,17 +200,4 @@ export function Catbot() {
             </AnimatePresence>
         </>
     );
-}
-
-// Simple rule-based "AI" logic for MVP
-function getBotResponse(input: string): string {
-    const lower = input.toLowerCase();
-
-    if (lower.includes('hola') || lower.includes('buenos')) return "¡Hola futuro solar! ☀️ ¿Estás listo para ahorrar energía?";
-    if (lower.includes('precio') || lower.includes('costo') || lower.includes('cuesta')) return "Nuestros kits van desde los 699€ para balcones hasta sistemas completos. Además, ¡ofrecemos financiación flexible! 💸";
-    if (lower.includes('batería') || lower.includes('acumulador')) return "Las baterías te permiten usar energía solar incluso de noche 🌙. Recomendamos las Huawei Luna2000 por su eficiencia.";
-    if (lower.includes('instalad') || lower.includes('montaje')) return "Todos nuestros instaladores están certificados ✅. Puedes ver la lista de expertos en la sección de 'Instaladores'.";
-    if (lower.includes('ahorro') || lower.includes('factura')) return "Con un sistema bien dimensionado, puedes reducir tu factura hasta en un 80%. ¡Prueba nuestra calculadora para un dato exacto! 🧮";
-
-    return "Interesante pregunta. Aún estoy aprendiendo 🧠, pero puedes contactar con un agente humano si necesitas detalles técnicos muy específicos.";
 }

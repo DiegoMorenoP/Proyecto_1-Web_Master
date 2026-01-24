@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Kit } from '../types';
-import { useToast } from '../components/common/Toast';
+// import { useToast } from '../components/common/Toast';
 
 export interface CartItem extends Kit {
     quantity: number;
@@ -15,6 +15,7 @@ interface CartContextType {
     subtotal: number;
     isOpen: boolean;
     toggleCart: () => void;
+    updateQuantity: (id: string, quantity: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,7 +26,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return saved ? JSON.parse(saved) : [];
     });
     const [isOpen, setIsOpen] = useState(false);
-    const { showToast } = useToast();
+    // const { showToast } = useToast(); // Removed unused hook
 
     useEffect(() => {
         localStorage.setItem('cart', JSON.stringify(items));
@@ -44,7 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             return [...current, { ...kit, quantity: 1 }];
         });
         setIsOpen(true);
-        showToast(`"${kit.name}" añadido al carrito`, 'success');
+        // Toast removed as per user request
     };
 
     const removeItem = (id: string) => {
@@ -54,6 +55,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const clearCart = () => setItems([]);
 
     const toggleCart = () => setIsOpen(prev => !prev);
+
+    const updateQuantity = (id: string, quantity: number) => {
+        if (quantity < 1) return;
+        setItems(current =>
+            current.map(item =>
+                item.id === id ? { ...item, quantity } : item
+            )
+        );
+    };
 
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -67,7 +77,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             itemCount,
             subtotal,
             isOpen,
-            toggleCart
+            toggleCart,
+            updateQuantity
         }}>
             {children}
         </CartContext.Provider>

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Sun, Battery, DollarSign, ArrowRight, Leaf, TrendingUp, Info } from 'lucide-react';
+import { Sun, Battery, ArrowRight, Leaf, TrendingUp, Info, Bot, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const SolarCalculator = () => {
+export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => void }) => {
     const [bill, setBill] = useState(150);
     const [sunHours, setSunHours] = useState(5);
 
@@ -12,7 +12,7 @@ export const SolarCalculator = () => {
     const SYSTEM_COST_PER_KW = 1100; // € (installed)
     const CO2_PER_KWH = 0.3; // kg
     const TREES_PER_TON_CO2 = 45; // trees per ton
-    const ANNUAL_INFLATION = 0.03; // 3% electricity price increase
+
     const FINANCING_RATE = 0.065; // 6.5% interest
     const FINANCING_YEARS = 10;
 
@@ -21,18 +21,13 @@ export const SolarCalculator = () => {
         const monthlyKwh = bill / ELECTRICITY_PRICE;
         const annualKwh = monthlyKwh * 12;
 
-        // 2. System Sizing (Target ~100% offset if possible, capped by roof/regulations usually, here simple)
-        // Required Annual Generation = Annual kWh
-        // Installed kWp = Annual kWh / (Sun Hours * 365 * Efficiency)
-        // Efficiency factor ~ 0.75 (performance ratio)
+        // 2. System Sizing
         const requiredKwp = annualKwh / (sunHours * 365 * 0.75);
         const panelCount = Math.ceil((requiredKwp * 1000) / PANEL_WATTAGE);
         const systemSizeKw = (panelCount * PANEL_WATTAGE) / 1000;
 
         // 3. Financials
         const totalSystemCost = systemSizeKw * SYSTEM_COST_PER_KW;
-
-        // Monthly financing payment formula: P * r * (1+r)^n / ((1+r)^n - 1)
         const monthlyRate = FINANCING_RATE / 12;
         const numPayments = FINANCING_YEARS * 12;
         const loanPayment = (totalSystemCost * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
@@ -40,15 +35,11 @@ export const SolarCalculator = () => {
         // Savings
         const initialAnnualSavings = annualKwh * ELECTRICITY_PRICE;
         const initialMonthlySavings = initialAnnualSavings / 12;
-
-        // Net Monthly (Positive Cash Flow)
-        // We assume they stop paying the utility bill (mostly) and pay the loan instead.
-        // Remnant utility bill (fixed costs) not calculated here for simplicity's sake, assuming near 100% offset.
         const netMonthlyBenefit = initialMonthlySavings - loanPayment;
 
         // ROI & Payback
         const paybackYears = totalSystemCost / initialAnnualSavings;
-        const roi = ((initialAnnualSavings * 25 - totalSystemCost) / totalSystemCost) * 100; // 25 year lifetime
+        const roi = ((initialAnnualSavings * 25 - totalSystemCost) / totalSystemCost) * 100;
 
         // 4. Environmental
         const annualCo2SavedKg = annualKwh * CO2_PER_KWH;
@@ -69,69 +60,77 @@ export const SolarCalculator = () => {
     }, [bill, sunHours]);
 
     return (
-        <div className="bg-slate-800/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 max-w-5xl mx-auto shadow-2xl overflow-hidden relative">
+        <section className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-3xl p-8 max-w-6xl mx-auto shadow-2xl overflow-hidden relative" aria-labelledby="calculator-title">
             <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
 
             <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-primary/20 rounded-xl">
-                            <Sun className="text-primary w-8 h-8" />
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-primary/20 rounded-xl text-primary">
+                            <Sun className="w-8 h-8" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold font-sans tracking-tight text-white">Simulador de Precisión</h2>
-                            <p className="text-slate-400 text-sm">Ajusta el consumo para dimensionar el sistema fotovoltaico.</p>
+                            <h2 id="calculator-title" className="text-2xl font-heading font-bold tracking-tight text-foreground">Simulador de Precisión</h2>
+                            <p className="text-muted-foreground text-sm">Ajusta el consumo para dimensionar tu sistema fotovoltaico ideal.</p>
                         </div>
                     </div>
-                </div>
+                </header>
 
                 <div className="grid lg:grid-cols-12 gap-8">
                     {/* INPUTS SECTION */}
-                    <div className="lg:col-span-4 space-y-8 bg-white/5 p-6 rounded-2xl h-fit">
+                    <div className="lg:col-span-4 space-y-8 bg-secondary/30 p-6 rounded-2xl h-fit border border-white/5">
                         {/* Bill Input */}
                         <div className="space-y-6">
                             <div className="flex justify-between items-end">
-                                <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">Factura Mensual Actual</span>
-                                <span className="text-3xl font-bold text-primary">{bill}€</span>
+                                <label htmlFor="bill-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Factura Mensual</label>
+                                <span className="text-3xl font-mono font-bold text-primary">{bill}€</span>
                             </div>
                             <input
+                                id="bill-input"
                                 type="range"
                                 min="50"
                                 max="600"
                                 step="10"
                                 value={bill}
                                 onChange={(e) => setBill(Number(e.target.value))}
-                                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80 transition-all"
+                                className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/90 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                                aria-valuemin={50}
+                                aria-valuemax={600}
+                                aria-valuenow={bill}
                             />
-                            <div className="flex justify-between text-xs text-slate-500 font-mono">
+                            <div className="flex justify-between text-xs text-muted-foreground font-mono" aria-hidden="true">
                                 <span>50€</span>
                                 <span>600€</span>
                             </div>
                         </div>
 
                         {/* Sun Hours Input */}
-                        <div className="space-y-6 pt-4 border-t border-white/5">
+                        <div className="space-y-6 pt-6 border-t border-border/50">
                             <div className="flex justify-between items-end">
-                                <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">Horas de Sol Diarias</span>
-                                <span className="text-3xl font-bold text-primary">{sunHours}h</span>
+                                <label htmlFor="sun-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Horas de Sol Diarias</label>
+                                <span className="text-3xl font-mono font-bold text-primary">{sunHours}h</span>
                             </div>
                             <input
+                                id="sun-input"
                                 type="range"
                                 min="3"
                                 max="10"
                                 step="0.5"
                                 value={sunHours}
                                 onChange={(e) => setSunHours(Number(e.target.value))}
-                                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80 transition-all"
+                                className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/90 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                                aria-valuemin={3}
+                                aria-valuemax={10}
+                                aria-valuenow={sunHours}
                             />
-                            <div className="flex justify-between text-xs text-slate-500 font-mono">
+                            <div className="flex justify-between text-xs text-muted-foreground font-mono" aria-hidden="true">
                                 <span>3h</span>
                                 <span>10h (Verano)</span>
                             </div>
                         </div>
 
-                        <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 text-blue-200 text-sm">
-                            <Info className="w-5 h-5 flex-shrink-0" />
+                        <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 text-blue-300 text-sm">
+                            <Info className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                             <p>Cálculo basado en irradiación media anual y precio pool 0.20€/kWh.</p>
                         </div>
                     </div>
@@ -140,53 +139,52 @@ export const SolarCalculator = () => {
                     <div className="lg:col-span-8 grid md:grid-cols-2 gap-6">
 
                         {/* Financial Card */}
-                        <div className="md:col-span-2 bg-slate-900 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-50" />
+                        <div className="md:col-span-2 bg-secondary rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden group border border-border/50 shadow-inner">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-50" />
 
-                            <div className="space-y-4 relative z-10 w-full">
+                            <div className="space-y-4 relative z-10 w-full md:w-auto">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <TrendingUp className="text-accent w-5 h-5" />
-                                    <h3 className="font-bold text-lg text-white">Proyección Financiera (TCO)</h3>
+                                    <TrendingUp className="text-accent w-5 h-5" aria-hidden="true" />
+                                    <h3 className="font-bold text-lg text-foreground">Proyección Financiera (TCO)</h3>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-8 py-4 border-y border-white/10">
+                                <div className="grid grid-cols-2 gap-12 py-4 border-y border-border/50">
                                     <div>
-                                        <p className="text-slate-400 text-sm mb-1">Cuota Financiación</p>
-                                        <p className="text-2xl text-white font-mono font-bold">{Math.round(data.loanPayment)}€<span className="text-sm text-slate-500">/mes</span></p>
+                                        <p className="text-muted-foreground text-sm mb-1">Cuota Financiación</p>
+                                        <p className="text-2xl text-foreground font-mono font-bold">{Math.round(data.loanPayment)}€<span className="text-sm text-muted-foreground font-sans">/mes</span></p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-slate-400 text-sm mb-1">Ahorro Estimado</p>
-                                        <p className="text-2xl text-accent font-mono font-bold">{Math.round(data.initialMonthlySavings)}€<span className="text-sm text-slate-500">/mes</span></p>
+                                        <p className="text-muted-foreground text-sm mb-1">Ahorro Estimado</p>
+                                        <p className="text-2xl text-accent font-mono font-bold">{Math.round(data.initialMonthlySavings)}€<span className="text-sm text-muted-foreground font-sans">/mes</span></p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-6 md:mt-0 md:ml-12 relative z-10 flex-shrink-0 flex items-center justify-center">
-                                <div className="w-32 h-32 rounded-full border-4 border-slate-700 flex items-center justify-center relative">
-                                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin-slow-static" style={{ transform: 'rotate(-45deg)', animation: 'none' }} />
+                            <div className="mt-8 md:mt-0 md:ml-12 relative z-10 flex-shrink-0 flex items-center justify-center">
+                                <div className="w-32 h-32 rounded-full border-4 border-secondary-foreground/10 flex items-center justify-center relative">
                                     {/* Static visual representation of 'autarky' or savings % */}
                                     <div className="absolute inset-0 rounded-full border-4 border-primary" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 75%, 0% 100%)' }} />
 
                                     <div className="text-center">
-                                        <span className="block text-3xl font-bold text-white">92%</span>
-                                        <span className="text-[10px] uppercase tracking-wider text-slate-400">Autarquía</span>
+                                        <span className="block text-3xl font-bold text-foreground">92%</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Autarquía</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* System Recommendation */}
-                        <div className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-primary/30 transition-colors">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 block">Sistema Recomendado</span>
+                        <div className="bg-card/50 rounded-2xl p-6 border border-border/50 hover:border-primary/30 transition-colors">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 block">Sistema Recomendado</span>
                             <div className="flex items-end gap-3 mb-2">
-                                <span className="text-5xl font-bold text-white tracking-tighter">{data.panelCount}</span>
+                                <span className="text-5xl font-bold text-foreground tracking-tighter">{data.panelCount}</span>
                                 <span className="text-lg text-primary font-medium mb-1.5">Paneles Tier-1</span>
                             </div>
-                            <p className="text-slate-400 text-sm">Potencia total instalada: <span className="text-white font-mono">{data.systemSizeKw.toFixed(1)} kWp</span></p>
+                            <p className="text-muted-foreground text-sm">Potencia total instalada: <span className="text-foreground font-mono">{data.systemSizeKw.toFixed(1)} kWp</span></p>
                         </div>
 
                         {/* Cash Flow */}
-                        <div className="bg-accent/10 rounded-2xl p-6 border border-accent/20 hover:bg-accent/15 transition-colors">
+                        <div className="bg-accent/5 rounded-2xl p-6 border border-accent/20 hover:bg-accent/10 transition-colors">
                             <span className="text-xs font-bold text-accent uppercase tracking-widest mb-4 block">Cash Flow Positivo</span>
                             <div className="flex items-end gap-3 mb-2">
                                 <span className="text-5xl font-bold text-accent tracking-tighter">+{Math.round(data.netMonthlyBenefit)}€</span>
@@ -196,34 +194,34 @@ export const SolarCalculator = () => {
                         </div>
 
                         {/* Environmental Impact (Full Width) */}
-                        <div className="md:col-span-2 bg-gradient-to-br from-green-900/40 to-slate-900/40 rounded-2xl p-6 border border-green-500/20 flex flex-wrap gap-8 items-center justify-center md:justify-around">
+                        <div className="md:col-span-2 bg-gradient-to-br from-green-900/20 to-secondary/50 rounded-2xl p-6 border border-green-500/10 flex flex-wrap gap-8 items-center justify-center md:justify-around">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-full bg-green-500/20 text-green-400">
-                                    <Leaf className="w-6 h-6" />
+                                <div className="p-3 rounded-full bg-green-500/10 text-green-400">
+                                    <Leaf className="w-6 h-6" aria-hidden="true" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-white">{(data.annualCo2SavedKg / 1000).toFixed(1)} Ton</p>
-                                    <p className="text-xs text-green-200/70 uppercase tracking-wider">CO2 Evitado / Año</p>
+                                    <p className="text-2xl font-bold text-foreground">{(data.annualCo2SavedKg / 1000).toFixed(1)} Ton</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">CO2 Evitado / Año</p>
                                 </div>
                             </div>
-                            <div className="w-px h-12 bg-white/10 hidden md:block" />
+                            <div className="w-px h-12 bg-border/50 hidden md:block" />
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-full bg-emerald-500/20 text-emerald-400">
-                                    <Sun className="w-6 h-6" />
+                                <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-400">
+                                    <Sun className="w-6 h-6" aria-hidden="true" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-white">{Math.round(data.annualTrees)}</p>
-                                    <p className="text-xs text-emerald-200/70 uppercase tracking-wider">Árboles Equivalentes</p>
+                                    <p className="text-2xl font-bold text-foreground">{Math.round(data.annualTrees)}</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Árboles Equivalentes</p>
                                 </div>
                             </div>
-                            <div className="w-px h-12 bg-white/10 hidden md:block" />
+                            <div className="w-px h-12 bg-border/50 hidden md:block" />
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-full bg-blue-500/20 text-blue-400">
-                                    <Battery className="w-6 h-6" />
+                                <div className="p-3 rounded-full bg-blue-500/10 text-blue-400">
+                                    <Battery className="w-6 h-6" aria-hidden="true" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-white">{data.paybackYears.toFixed(1)} Años</p>
-                                    <p className="text-xs text-blue-200/70 uppercase tracking-wider">Retorno Inversión</p>
+                                    <p className="text-2xl font-bold text-foreground">{data.paybackYears.toFixed(1)} Años</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Retorno Inversión</p>
                                 </div>
                             </div>
                         </div>
@@ -231,15 +229,45 @@ export const SolarCalculator = () => {
                     </div>
                 </div>
 
+                {/* AI REPORT SECTION */}
+                <div className="mt-8 bg-blue-500/5 border border-blue-500/10 rounded-2xl p-8 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <Bot className="w-32 h-32 text-blue-400" aria-hidden="true" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex-1 space-y-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
+                                <Sparkles className="w-3 h-3" aria-hidden="true" />
+                                Gemini Powered
+                            </div>
+                            <h3 className="text-2xl font-heading font-bold text-foreground">¿Es esta una buena inversión?</h3>
+                            <p className="text-muted-foreground max-w-xl">
+                                Deja que nuestra IA analice tu perfil de consumo y te explique el retorno de inversión en lenguaje sencillo.
+                            </p>
+                        </div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-shrink-0 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                            <Bot className="w-5 h-5" aria-hidden="true" />
+                            Generar Informe Inteligente
+                        </motion.button>
+                    </div>
+                </div>
+
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="mt-10 w-full py-4 bg-primary text-secondary-foreground font-bold text-lg rounded-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all"
+                    onClick={onReserveClick}
+                    className="mt-10 w-full py-4 bg-primary text-primary-foreground font-bold text-lg rounded-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                     Reservar Estudio Gratuito
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </motion.button>
             </div>
-        </div>
+        </section>
     );
 };

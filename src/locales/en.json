@@ -15,12 +15,51 @@
     "nav": {
         "home": "Home",
         "products": "Products",
-        "calculator": "Calculator",
+        "calculator": "Simulator",
         "installers": "Installers"
     },
     "hero": {
         "title": "Take control of your <1>energy</1>",
         "subtitle": "Calculate your savings in real-time and discover the perfect solar kit for your home. No technical complications."
+    },
+    "calculator": {
+        "title": "Precision Simulator",
+        "subtitle": "Adjust consumption to size the photovoltaic system.",
+        "currentBill": "Current Monthly Bill",
+        "sunHours": "Daily Sun Hours",
+        "disclaimer": "Calculation based on annual average irradiation and pool price 0.20€/kWh.",
+        "financialProjection": "Financial Projection (TCO)",
+        "financingInstallment": "Financing Installment",
+        "estimatedSavings": "Estimated Savings",
+        "recommendedSystem": "Recommended System",
+        "tier1Panels": "Tier-1 Panels",
+        "installedPower": "Total Installed Power",
+        "positiveCashFlow": "Positive Cash Flow",
+        "netSavings": "Net savings from the first month",
+        "co2Saved": "CO2 Avoided / Year",
+        "trees": "Equivalent Trees",
+        "roi": "ROI Payback",
+        "bookStudy": "Book Free Study",
+        "months": "/mo",
+        "years": "Years"
+    },
+    "installers": {
+        "badge": "Certified Network",
+        "title": "Verified <1>Installers</1>",
+        "desc": "Don't worry about installation. We work with the best experts in your area, audited by us.",
+        "count": "+500 Installers",
+        "rating": "Average Rating",
+        "viewProfile": "View Profile"
+    },
+    "dsm": {
+        "badge": "DSM Technology 2026",
+        "title": "Solar Mapping <1>3D & AI</1>",
+        "desc": "We use <1>Digital Surface Models (DSM)</1> and computer vision algorithms to calculate the exact irradiance of every square meter of your roof.",
+        "features": {
+            "obstacles": "3D modeling of obstacles and shadows",
+            "efficiency": "Efficiency calculation per m²",
+            "optimalArea": "Automatic selection of optimal area"
+        }
     },
     "sections": {
         "featuredKits": "Featured Kits",

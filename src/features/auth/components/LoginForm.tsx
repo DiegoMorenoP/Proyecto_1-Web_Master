@@ -8,9 +8,10 @@ import { type LoginFormData, loginSchema } from '../schemas';
 
 interface LoginFormProps {
     onSuccess?: () => void;
+    embedded?: boolean;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, embedded = false }: LoginFormProps) {
     const navigate = useNavigate();
     // We can use the context to check session, but Supabase auth functions are direct
     const [error, setError] = useState<string | null>(null);
@@ -48,8 +49,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         }
     };
 
+    const containerClasses = embedded
+        ? "w-full max-w-md space-y-8 p-8"
+        : "w-full max-w-md space-y-8 bg-white/5 p-8 rounded-xl border border-white/10 backdrop-blur-sm";
+
     return (
-        <div className="w-full max-w-md space-y-8 bg-white/5 p-8 rounded-xl border border-white/10 backdrop-blur-sm">
+        <div className={containerClasses}>
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-white">
                     Inicia Sesión

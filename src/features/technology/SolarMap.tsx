@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMap, useMapEvents, Rectangle, CircleMarker } from 'react-leaflet';
-import { Search, Zap, Sun, Info, Loader2, ScanLine, BrainCircuit, Waves, Maximize2, Minimize2, Plus, Minus, MousePointer2, ChevronDown, ChevronUp, X, Locate } from 'lucide-react';
+import { Search, Zap, Sun, Info, Loader2, ScanLine, BrainCircuit, Waves, Maximize2, Minimize2, Plus, Minus, MousePointer2, ChevronDown, ChevronUp, X, Locate, Trash2, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -73,7 +73,7 @@ function MapControls({
 
     return (
         <div
-            className={`absolute right-6 z-[1000] flex flex-col gap-2 transition-all duration-300 ${hasStatsPanel ? 'bottom-48 sm:bottom-40' : 'bottom-6'}`}
+            className={`absolute right-6 z-[6000] flex flex-col gap-2 transition-all duration-300 ${hasStatsPanel ? 'bottom-48 sm:bottom-40' : 'bottom-6'}`}
             onMouseDown={stopProp}
             onDoubleClick={stopProp}
             onClick={stopProp}
@@ -123,6 +123,11 @@ function MapControls({
 function PanelPlacer({ onPlacePanel }: { onPlacePanel: (latlng: L.LatLng) => void }) {
     useMapEvents({
         click(e) {
+            // Prevent placement if clicking on controls
+            const target = e.originalEvent.target as HTMLElement;
+            if (target.closest('button') || target.closest('.leaflet-control') || target.closest('.leaflet-interactive')) {
+                return;
+            }
             onPlacePanel(e.latlng);
         },
     });
@@ -148,31 +153,70 @@ export function SolarMap() {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isStatsExpanded, setIsStatsExpanded] = useState(false); // Collapsed by default
     const [isSearchOpen, setIsSearchOpen] = useState(false); // Collapsible search state
+    const [mapType, setMapType] = useState<'satellite' | 'standard'>('satellite');
     const mapWrapperRef = React.useRef<HTMLDivElement>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    // Auto-focus input when search opens
+    useEffect(() => {
+        if (isSearchOpen && inputRef.current) {
+            // Small timeout to allow transition/render
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
+    }, [isSearchOpen]);
 
     // Sync fullscreen state with browser event
     useEffect(() => {
         const handleChange = () => {
-            const isFull = !!document.fullscreenElement;
+            const doc = document as any;
+            const isFull = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
             setIsFullscreen(isFull);
             setIsStatsExpanded(isFull); // Auto-expand on fullscreen, collapse on minimize
         };
+
         document.addEventListener('fullscreenchange', handleChange);
-        return () => document.removeEventListener('fullscreenchange', handleChange);
+        document.addEventListener('webkitfullscreenchange', handleChange);
+        document.addEventListener('mozfullscreenchange', handleChange);
+        document.addEventListener('MSFullscreenChange', handleChange);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleChange);
+            document.removeEventListener('webkitfullscreenchange', handleChange);
+            document.removeEventListener('mozfullscreenchange', handleChange);
+            document.removeEventListener('MSFullscreenChange', handleChange);
+        };
     }, []);
 
     const toggleFullscreen = async () => {
         if (!mapWrapperRef.current) return;
+        const elem = mapWrapperRef.current as any;
+        const doc = document as any;
 
-        if (!document.fullscreenElement) {
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
             try {
-                await mapWrapperRef.current.requestFullscreen();
+                if (elem.requestFullscreen) {
+                    await elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    await elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    await elem.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    await elem.mozRequestFullScreen();
+                }
             } catch (err) {
                 console.error("Error attempting to enable fullscreen:", err);
             }
         } else {
-            if (document.exitFullscreen) {
-                await document.exitFullscreen();
+            if (doc.exitFullscreen) {
+                await doc.exitFullscreen();
+            } else if (doc.webkitExitFullscreen) {
+                await doc.webkitExitFullscreen();
+            } else if (doc.mozCancelFullScreen) {
+                await doc.mozCancelFullScreen();
+            } else if (doc.msExitFullscreen) {
+                await doc.msExitFullscreen();
             }
         }
     };
@@ -213,7 +257,6 @@ export function SolarMap() {
         if (!searchQuery) return;
         setLoading(true);
         setAnalysisState('idle');
-        setSolarData(null);
         setSolarData(null);
         setPanels([]);
         setMarkerPosition(null);
@@ -270,8 +313,6 @@ export function SolarMap() {
     const annualGeneration = Math.round(totalPower * irradiance * 365 * 0.85);
     const annualSavings = Math.round(annualGeneration * 0.15);
 
-    // Toggle scroll on body removed as native fullscreen handles it
-
     return (
         <div
             ref={mapWrapperRef}
@@ -287,16 +328,27 @@ export function SolarMap() {
                 scrollWheelZoom={true}
                 doubleClickZoom={false}
             >
-                <TileLayer
-                    attribution='Tiles &copy; Esri'
-                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                    maxNativeZoom={19}
-                    maxZoom={22}
-                />
-                <TileLayer
-                    url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png"
-                    opacity={0.6}
-                />
+                {mapType === 'satellite' ? (
+                    <>
+                        <TileLayer
+                            attribution='Tiles &copy; Esri'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            maxNativeZoom={19}
+                            maxZoom={22}
+                        />
+                        <TileLayer
+                            url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png"
+                            opacity={0.6}
+                        />
+                    </>
+                ) : (
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                        maxNativeZoom={20}
+                        maxZoom={22}
+                    />
+                )}
 
                 <FlyToLocation coords={center} />
                 <MapResizer isFullscreen={isFullscreen} />
@@ -318,17 +370,30 @@ export function SolarMap() {
                 ))}
 
                 {markerPosition && (
-                    <CircleMarker
-                        center={markerPosition}
-                        radius={8}
-                        pathOptions={{
-                            color: '#eab308', // yellow-500
-                            fillColor: 'transparent',
-                            weight: 2,
-                            opacity: 0.8,
-                            dashArray: '4, 4'
-                        }}
-                    />
+                    <>
+                        <CircleMarker
+                            center={markerPosition}
+                            radius={20}
+                            pathOptions={{
+                                color: '#eab308',
+                                fillColor: '#eab308',
+                                fillOpacity: 0.2,
+                                weight: 0
+                            }}
+                            interactive={false}
+                        />
+                        <CircleMarker
+                            center={markerPosition}
+                            radius={6}
+                            pathOptions={{
+                                color: '#ffffff',
+                                fillColor: '#eab308',
+                                fillOpacity: 1,
+                                weight: 2
+                            }}
+                            interactive={false}
+                        />
+                    </>
                 )}
             </MapContainer>
 
@@ -367,8 +432,19 @@ export function SolarMap() {
             </AnimatePresence>
 
             {/* Search Bar */}
-            {/* Search Bar */}
-            <div className={`absolute left-4 z-[500] transition-all duration-300 ${isFullscreen ? 'top-8' : 'top-4'}`}>
+            {/* Search Bar & Map Controls */}
+            <div className={`absolute left-4 z-[500] transition-all duration-300 flex items-center gap-3 ${isFullscreen ? 'top-8' : 'top-4'}`}>
+
+                {/* Map Layer Toggle (Standard <-> Satellite) */}
+                <button
+                    onClick={() => setMapType(prev => prev === 'satellite' ? 'standard' : 'satellite')}
+                    title={mapType === 'satellite' ? "Cambiar a Mapa Plano" : "Cambiar a Satélite"}
+                    className="h-12 w-12 bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center text-slate-400 hover:text-white shadow-2xl transition-all hover:scale-105"
+                >
+                    <Layers className="w-5 h-5" />
+                </button>
+
+                {/* Search Input */}
                 <div className={`relative transition-all duration-300 ease-out flex items-center shadow-2xl bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden ${isSearchOpen || searchQuery ? 'w-[320px] sm:w-[500px]' : 'w-12 h-12'}`}>
 
                     <button
@@ -382,16 +458,21 @@ export function SolarMap() {
                     <form
                         onSubmit={(e) => {
                             handleSearch(e);
-                            // Keep expanded if searching, but maybe collapse if desired? User said "mantenga".
                         }}
                         className={`w-full h-full flex items-center transition-opacity duration-300 ${isSearchOpen || searchQuery ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     >
                         <input
+                            ref={inputRef}
                             type="text"
                             placeholder="Introduce tu dirección completa..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setIsSearchOpen(true)}
+                            onBlur={() => {
+                                if (!searchQuery) {
+                                    setIsSearchOpen(false);
+                                }
+                            }}
                             className="w-full h-12 bg-transparent text-white pl-12 pr-10 focus:outline-none placeholder:text-slate-500 text-sm"
                         />
                         {loading && (
@@ -444,10 +525,18 @@ export function SolarMap() {
                             >
                                 <Sun className="w-5 h-5" />
                             </button>
+
+                            <button
+                                onClick={() => setPanels([])}
+                                title="Limpiar Paneles"
+                                className="p-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
                         </div>
                     )}
 
-                    {mode === 'place' && (
+                    {mode === 'place' && panels.length === 0 && (
                         <div className="absolute left-14 top-0 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 text-xs text-white whitespace-nowrap animate-in fade-in slide-in-from-left-2 pointer-events-none">
                             Haz clic para añadir paneles
                         </div>

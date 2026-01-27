@@ -17,7 +17,7 @@ export function KitCard({ kit, onViewDetails, compact = false }: KitCardProps) {
         <Card
             variant="interactive"
             layout
-            className={`h-full flex flex-col group relative overflow-hidden cursor-pointer border-0 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${compact ? 'rounded-3xl' : 'rounded-[2rem]'}`}
+            className={`h-full flex flex-col group relative overflow-hidden cursor-pointer border-0 shadow-2xl transition-all duration-700 ease-in-out ${compact ? 'rounded-3xl' : 'rounded-[2rem]'}`}
             onClick={onViewDetails}
         >
             {/* Full Height Background Image */}
@@ -27,7 +27,7 @@ export function KitCard({ kit, onViewDetails, compact = false }: KitCardProps) {
                         layout
                         src={kit.image_url}
                         alt={kit.name}
-                        className={`w-full h-full object-cover transition-transform duration-1000 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${compact ? 'scale-100' : 'group-hover:scale-110'}`}
+                        className={`w-full h-full object-cover transition-transform duration-1000 ease-in-out ${compact ? 'scale-100' : 'group-hover:scale-110'}`}
                         loading="lazy"
                     />
                 ) : (
@@ -54,7 +54,7 @@ export function KitCard({ kit, onViewDetails, compact = false }: KitCardProps) {
                 <div className="flex-1" />
 
                 {/* Bottom Info Panel */}
-                <motion.div layout className={`transform transition-transform duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${compact ? 'translate-y-0' : 'translate-y-4 group-hover:translate-y-0'}`}>
+                <motion.div layout className={`transform transition-transform duration-700 ease-in-out ${compact ? 'translate-y-0' : 'translate-y-4 group-hover:translate-y-0'}`}>
                     {/* Power Spec */}
                     {!compact && (
                         <div className="flex items-center gap-2 mb-3">

@@ -75,6 +75,38 @@ function HomePage() {
 }
 
 function App() {
+  const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!isConfigured) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-slate-900 p-8 rounded-2xl max-w-lg w-full border border-red-500/20 shadow-2xl">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Setup Required</h1>
+          <p className="text-slate-400 mb-6">The application is deployed but needs configuration to connect to the database.</p>
+
+          <div className="bg-black/30 rounded-lg p-4 mb-6 border border-white/5">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Missing Environment Variables</h3>
+            <ul className="space-y-2 font-mono text-sm">
+              <li className="flex items-center gap-2 text-red-400">
+                <span className="w-4 h-4 flex items-center justify-center">×</span> VITE_SUPABASE_URL
+              </li>
+              <li className="flex items-center gap-2 text-red-400">
+                <span className="w-4 h-4 flex items-center justify-center">×</span> VITE_SUPABASE_ANON_KEY
+              </li>
+            </ul>
+          </div>
+
+          <div className="text-sm text-slate-500">
+            Go to <span className="text-white font-medium">Vercel Dashboard &gt; Settings &gt; Environment Variables</span> to add them.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <ToastProvider>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { GlassContainer } from '../common/GlassContainer';
 import { Badge } from '../common/Badge';
-import { MapPin, Star, ShieldCheck, UserCheck } from 'lucide-react';
+import { MapPin, Star, ShieldCheck, UserCheck, ArrowRight } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { InstallerDetailModal, type Installer } from './InstallerDetailModal';
+import { InstallersListModal } from './InstallersListModal';
 
 const INSTALLERS: Installer[] = [
     {
@@ -47,12 +48,56 @@ const INSTALLERS: Installer[] = [
         yearsExperience: 15,
         completedProjects: 2100,
         certifications: ["ISO 9001:2015", "Fronius Service Partner", "SMA Expert Installer"]
+    },
+    // Mock duplicates for full list view
+    {
+        id: 4,
+        name: "Soluciones del Sur",
+        location: "Sevilla, España",
+        rating: 4.7,
+        reviews: 42,
+        verified: true,
+        avatar: "SS",
+        description: "Energía solar para Andalucía. Aprovecha el sol al máximo con nuestros kits de alto rendimiento.",
+        specialties: ["Residencial", "Riego Solar"],
+        yearsExperience: 7,
+        completedProjects: 500,
+        certifications: ["Junta Andalucía"]
+    },
+    {
+        id: 5,
+        name: "Norte Solar",
+        location: "Bilbao, España",
+        rating: 4.9,
+        reviews: 30,
+        verified: true,
+        avatar: "NS",
+        description: "Instalaciones robustas para el clima del norte. Paneles de alta eficiencia y estructuras reforzadas.",
+        specialties: ["Residencial", "Industrial"],
+        yearsExperience: 10,
+        completedProjects: 300,
+        certifications: ["EVE Acreditado"]
+    },
+    {
+        id: 6,
+        name: "Galicia Verde",
+        location: "Vigo, España",
+        rating: 4.8,
+        reviews: 75,
+        verified: true,
+        avatar: "GV",
+        description: "Transformando tejados en Galicia. Especialistas en integración arquitectónica.",
+        specialties: ["Tejados Pizarra", "Integración"],
+        yearsExperience: 9,
+        completedProjects: 600,
+        certifications: ["Xunta Renovables"]
     }
 ];
 
 export function InstallerSection() {
     const { t } = useTranslation();
     const [selectedInstaller, setSelectedInstaller] = useState<Installer | null>(null);
+    const [isListModalOpen, setIsListModalOpen] = useState(false);
 
     return (
         <section id="installers" className="py-24 relative overflow-hidden">
@@ -74,20 +119,29 @@ export function InstallerSection() {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-8 text-slate-400 text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                            <UserCheck className="w-5 h-5 text-primary" />
-                            {t('installers.count')}
+                    <div className="flex flex-col items-end gap-4">
+                        <div className="flex items-center gap-8 text-slate-400 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                                <UserCheck className="w-5 h-5 text-primary" />
+                                {t('installers.count')}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Star className="w-5 h-5 text-yellow-400" />
+                                4.9/5 {t('installers.rating')}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Star className="w-5 h-5 text-yellow-400" />
-                            4.9/5 {t('installers.rating')}
-                        </div>
+                        <button
+                            onClick={() => setIsListModalOpen(true)}
+                            className="bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 group"
+                        >
+                            Ver todos los instaladores
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {INSTALLERS.map(installer => (
+                    {INSTALLERS.slice(0, 3).map(installer => (
                         <GlassContainer
                             key={installer.id}
                             className="p-6 hover:border-primary/30 transition-all duration-300 group cursor-pointer hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
@@ -132,6 +186,16 @@ export function InstallerSection() {
                 installer={selectedInstaller}
                 isOpen={!!selectedInstaller}
                 onClose={() => setSelectedInstaller(null)}
+            />
+
+            <InstallersListModal
+                isOpen={isListModalOpen}
+                onClose={() => setIsListModalOpen(false)}
+                installers={INSTALLERS}
+                onSelectInstaller={(installer) => {
+                    setIsListModalOpen(false);
+                    setTimeout(() => setSelectedInstaller(installer), 300); // Small delay for smooth transition
+                }}
             />
         </section>
     );

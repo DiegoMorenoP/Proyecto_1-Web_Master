@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { X, Check, ShoppingCart, Zap, Battery, Home, Info, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Kit } from '../../types';
@@ -13,6 +14,12 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: ProductDetailModalProps) {
     const { t } = useTranslation();
+    const [imgError, setImgError] = useState(false);
+
+    // Reset error state when product changes
+    useEffect(() => {
+        setImgError(false);
+    }, [product]);
 
     if (!isOpen || !product) return null;
 
@@ -46,15 +53,24 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
 
                         {/* Image Section */}
                         <div className="relative w-full md:w-1/2 h-64 md:h-auto bg-muted">
-                            {product.image_url ? (
+                            {(product.image_url && !imgError) ? (
                                 <img
                                     src={product.image_url}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    onError={() => setImgError(true)}
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-secondary/30">
-                                    <Zap className="w-24 h-24 text-muted-foreground/30" />
+                                <div className="w-full h-full relative">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80"
+                                        alt="Solar Pattern"
+                                        className="w-full h-full object-cover opacity-50 grayscale"
+                                    />
+                                    <div className="absolute inset-0 bg-secondary/30 mix-blend-overlay" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Zap className="w-24 h-24 text-white/50" />
+                                    </div>
                                 </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent md:bg-gradient-to-r" />

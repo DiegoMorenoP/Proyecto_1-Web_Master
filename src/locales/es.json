@@ -10,7 +10,8 @@
         "language": "Idioma",
         "power": "Potencia",
         "savings": "Ahorro",
-        "viewDetails": "Ver Detalles"
+        "viewDetails": "Ver Detalles",
+        "outOfStock": "Agotado"
     },
     "nav": {
         "home": "Inicio",

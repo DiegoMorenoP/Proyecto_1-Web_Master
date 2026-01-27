@@ -14,29 +14,29 @@ TRUNCATE TABLE "public"."leads" CASCADE;
 
 -- 2. PRODUCTS (Panels, Inverters, Batteries) - ~20 Items
 WITH new_products AS (
-    INSERT INTO "public"."products" (name, type, price, voltage, stock_status, image_url, tech_spec_pdf) VALUES 
+    INSERT INTO "public"."products" (name, type, price, voltage, stock_status, image_url, tech_spec_pdf, stock) VALUES 
     -- Panels
-    ('SunPower Maxeon 6 AC', 'panel', 420.00, 50, 'in_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_maxeon6.pdf'),
-    ('Longi Hi-MO 5m 540W', 'panel', 245.00, 42, 'in_stock', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80', 'specs_himo5.pdf'),
-    ('Jinko Solar Tiger Neo', 'panel', 260.00, 44, 'in_stock', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80', 'specs_tiger.pdf'),
-    ('Canadian Solar BiHiKu7', 'panel', 280.00, 45, 'low_stock', 'https://images.unsplash.com/photo-1559302504-64aae6ca6b6f?auto=format&fit=crop&w=800&q=80', 'specs_bihiku7.pdf'),
-    ('Trina Solar Vertex S+', 'panel', 230.00, 40, 'out_of_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_vertex.pdf'),
-    ('REC Alpha Pure-R', 'panel', 390.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1624397640148-949b1732bb0a?auto=format&fit=crop&w=800&q=80', 'specs_rec.pdf'),
-    ('Qcells Q.PEAK DUO', 'panel', 310.00, 43, 'in_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_qcells.pdf'),
+    ('SunPower Maxeon 6 AC', 'panel', 420.00, 50, 'in_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_maxeon6.pdf', 150),
+    ('Longi Hi-MO 5m 540W', 'panel', 245.00, 42, 'in_stock', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80', 'specs_himo5.pdf', 85),
+    ('Jinko Solar Tiger Neo', 'panel', 260.00, 44, 'in_stock', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80', 'specs_tiger.pdf', 200),
+    ('Canadian Solar BiHiKu7', 'panel', 280.00, 45, 'low_stock', 'https://images.unsplash.com/photo-1559302504-64aae6ca6b6f?auto=format&fit=crop&w=800&q=80', 'specs_bihiku7.pdf', 8),
+    ('Trina Solar Vertex S+', 'panel', 230.00, 40, 'out_of_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_vertex.pdf', 0),
+    ('REC Alpha Pure-R', 'panel', 390.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1624397640148-949b1732bb0a?auto=format&fit=crop&w=800&q=80', 'specs_rec.pdf', 45),
+    ('Qcells Q.PEAK DUO', 'panel', 310.00, 43, 'in_stock', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 'specs_qcells.pdf', 60),
     
     -- Inverters
-    ('Huawei SUN2000-5KTL', 'inverter', 1200.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_huawei.pdf'),
-    ('Fronius Primo 5.0-1', 'inverter', 1450.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80', 'specs_fronius.pdf'),
-    ('SMA Sunny Boy 5.0', 'inverter', 1350.00, NULL, 'low_stock', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 'specs_sma.pdf'),
-    ('SolarEdge SE5000H', 'inverter', 1600.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1624397640148-949b1732bb0a?auto=format&fit=crop&w=800&q=80', 'specs_solaredge.pdf'),
-    ('Growatt MIN 5000TL-X', 'inverter', 950.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_growatt.pdf'),
+    ('Huawei SUN2000-5KTL', 'inverter', 1200.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_huawei.pdf', 25),
+    ('Fronius Primo 5.0-1', 'inverter', 1450.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80', 'specs_fronius.pdf', 18),
+    ('SMA Sunny Boy 5.0', 'inverter', 1350.00, NULL, 'low_stock', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 'specs_sma.pdf', 4),
+    ('SolarEdge SE5000H', 'inverter', 1600.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1624397640148-949b1732bb0a?auto=format&fit=crop&w=800&q=80', 'specs_solaredge.pdf', 30),
+    ('Growatt MIN 5000TL-X', 'inverter', 950.00, NULL, 'in_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_growatt.pdf', 50),
     
     -- Batteries
-    ('Tesla Powerwall 2', 'battery', 8500.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80', 'specs_powerwall.pdf'),
-    ('LG Chem RESU 10H', 'battery', 6800.00, 400, 'low_stock', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80', 'specs_lgchem.pdf'),
-    ('BYD Battery-Box Premium', 'battery', 5200.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 'specs_byd.pdf'),
-    ('Pylontech US3000C', 'battery', 1500.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80', 'specs_pylon.pdf'),
-    ('Huawei LUNA2000', 'battery', 4500.00, 360, 'out_of_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_luna.pdf')
+    ('Tesla Powerwall 2', 'battery', 8500.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80', 'specs_powerwall.pdf', 12),
+    ('LG Chem RESU 10H', 'battery', 6800.00, 400, 'low_stock', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80', 'specs_lgchem.pdf', 3),
+    ('BYD Battery-Box Premium', 'battery', 5200.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 'specs_byd.pdf', 15),
+    ('Pylontech US3000C', 'battery', 1500.00, 48, 'in_stock', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80', 'specs_pylon.pdf', 40),
+    ('Huawei LUNA2000', 'battery', 4500.00, 360, 'out_of_stock', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 'specs_luna.pdf', 0)
     
     RETURNING id, name, type
 ),

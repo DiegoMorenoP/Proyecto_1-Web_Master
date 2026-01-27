@@ -23,7 +23,8 @@ export interface Kit {
     monthly_finance_cost: number;
     description: string;
     image_url: string;
-    stock?: number;
+    stock: number;
+    stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock'; // Derived on frontend
     popularity_score?: number;
 }
 

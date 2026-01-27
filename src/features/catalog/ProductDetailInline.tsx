@@ -71,9 +71,14 @@ export function ProductDetailInline({ product, onClose, onAddToCart }: ProductDe
                             <span className="text-primary font-medium text-sm">
                                 {product.total_power} kW System
                             </span>
-                            {(product.stock === 0 || product.stock === undefined) && (
+                            {(product.stock_status === 'out_of_stock') && (
                                 <span className="px-2 py-1 bg-red-500/10 text-red-500 text-xs font-bold rounded-full border border-red-500/20">
                                     {t('common.outOfStock')}
+                                </span>
+                            )}
+                            {(product.stock_status === 'low_stock') && (
+                                <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs font-bold rounded-full border border-yellow-500/20">
+                                    POCAS UNIDADES
                                 </span>
                             )}
                         </div>
@@ -146,11 +151,11 @@ export function ProductDetailInline({ product, onClose, onAddToCart }: ProductDe
                             size="lg"
                             className="w-full sm:w-auto min-w-[200px] gap-2 shadow-lg shadow-primary/20"
                             onClick={() => onAddToCart(product)}
-                            disabled={product.stock !== undefined && product.stock === 0}
-                            variant={product.stock !== undefined && product.stock === 0 ? 'secondary' : 'primary'}
+                            disabled={product.stock_status === 'out_of_stock'}
+                            variant={product.stock_status === 'out_of_stock' ? 'secondary' : 'primary'}
                         >
                             <ShoppingCart className="w-5 h-5" />
-                            {product.stock !== undefined && product.stock === 0 ? t('common.outOfStock') : t('common.addToCart')}
+                            {product.stock_status === 'out_of_stock' ? t('common.outOfStock') : t('common.addToCart')}
                         </Button>
                     </div>
                 </div>

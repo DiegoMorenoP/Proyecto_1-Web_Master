@@ -56,7 +56,7 @@ export function CatalogueModal({ isOpen, onClose, kits }: CatalogueModalProps) {
 
         // 3. Stock Filter
         if (showOnlyInStock) {
-            result = result.filter(k => (k.stock ?? 0) > 0);
+            result = result.filter(k => k.stock_status !== 'out_of_stock');
         }
 
         // 4. Sorting
@@ -253,8 +253,8 @@ export function CatalogueModal({ isOpen, onClose, kits }: CatalogueModalProps) {
                                             <button
                                                 onClick={() => setShowOnlyInStock(!showOnlyInStock)}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${showOnlyInStock
-                                                        ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500'
-                                                        : 'bg-black/40 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
+                                                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500'
+                                                    : 'bg-black/40 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
                                                     }`}
                                             >
                                                 <div className={`w-2 h-2 rounded-full ${showOnlyInStock ? 'bg-emerald-500' : 'bg-slate-500'}`} />

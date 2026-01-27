@@ -101,9 +101,19 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
                                     <span className="text-lg text-muted-foreground line-through">
                                         {(Number(product.price) * 1.2).toLocaleString()}€
                                     </span>
-                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full">
-                                        -20% Oferta
-                                    </span>
+                                    {product.stock_status === 'out_of_stock' ? (
+                                        <span className="px-2 py-1 bg-red-500/10 text-red-500 text-xs font-bold rounded-full border border-red-500/20">
+                                            {t('common.outOfStock')}
+                                        </span>
+                                    ) : product.stock_status === 'low_stock' ? (
+                                        <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs font-bold rounded-full border border-yellow-500/20">
+                                            POCAS UNIDADES
+                                        </span>
+                                    ) : (
+                                        <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full">
+                                            -20% Oferta
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -155,15 +165,15 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
                                     variant="primary"
                                     size="lg"
                                     className="flex-1 gap-2 shadow-xl shadow-primary/20"
-                                    disabled={product.stock !== undefined && product.stock === 0}
+                                    disabled={product.stock_status === 'out_of_stock'}
                                     onClick={() => {
-                                        if (product.stock !== undefined && product.stock === 0) return;
+                                        if (product.stock_status === 'out_of_stock') return;
                                         onAddToCart(product);
                                         onClose();
                                     }}
                                 >
                                     <ShoppingCart className="w-5 h-5" />
-                                    {product.stock !== undefined && product.stock === 0 ? t('common.outOfStock') : `${t('common.addToCart')} - ${Number(product.price).toLocaleString()}€`}
+                                    {product.stock_status === 'out_of_stock' ? t('common.outOfStock') : `${t('common.addToCart')} - ${Number(product.price).toLocaleString()}€`}
                                 </Button>
                                 <Button
                                     variant="outline"

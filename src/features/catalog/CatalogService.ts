@@ -53,6 +53,18 @@ export const CatalogService = {
             return MOCK_KITS;
         }
 
-        return data as Kit[];
+        return data.map((kit: any) => {
+            const stock = kit.stock ?? 0;
+            let status: 'in_stock' | 'low_stock' | 'out_of_stock' = 'in_stock';
+
+            if (stock <= 0) status = 'out_of_stock';
+            else if (stock <= 5) status = 'low_stock';
+
+            return {
+                ...kit,
+                stock, // Ensure stock is always defined
+                stock_status: status
+            };
+        }) as Kit[];
     }
 };

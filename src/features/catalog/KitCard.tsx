@@ -57,6 +57,17 @@ export function KitCard({ kit, onViewDetails, compact = false }: KitCardProps) {
                         <Badge variant={kit.type === 'hybrid' ? 'success' : 'default'} className="backdrop-blur-xl bg-white/10 border-white/20 text-white px-4 py-1.5 text-xs font-bold tracking-wider shadow-lg">
                             {kit.type.toUpperCase()}
                         </Badge>
+                        {/* Stock Status Badge */}
+                        {(kit.stock_status === 'out_of_stock' || (kit.stock !== undefined && kit.stock <= 0)) && (
+                            <Badge variant="destructive" className="backdrop-blur-xl bg-red-500/20 border-red-500/50 text-red-500 px-3 py-1 text-[10px] font-bold tracking-wider shadow-lg">
+                                AGOTADO
+                            </Badge>
+                        )}
+                        {(kit.stock_status === 'low_stock' || (kit.stock !== undefined && kit.stock <= 5 && kit.stock > 0)) && (
+                            <Badge variant="warning" className="backdrop-blur-xl bg-yellow-500/20 border-yellow-500/50 text-yellow-500 px-3 py-1 text-[10px] font-bold tracking-wider shadow-lg">
+                                POCAS UNIDADES
+                            </Badge>
+                        )}
                     </div>
                 )}
 

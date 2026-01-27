@@ -10,23 +10,32 @@
         "language": "Language",
         "power": "Power",
         "savings": "Savings",
-        "viewDetails": "View Details"
+        "outOfStock": "Agotado",
+        "login": "Login",
+        "logout": "Logout",
+        "showMore": "Show more options"
     },
     "nav": {
         "home": "Home",
         "products": "Products",
+        "map3d": "Map",
         "calculator": "Simulator",
         "installers": "Installers"
     },
     "hero": {
         "title": "Take control of your <1>energy</1>",
-        "subtitle": "Calculate your savings in real-time and discover the perfect solar kit for your home. No technical complications."
+        "subtitle": "Calculate your savings in real-time and discover the perfect solar kit for your home. No technical complications.",
+        "cta": {
+            "simulate": "Simulate Savings",
+            "video": "Watch Demo Video"
+        }
     },
     "calculator": {
         "title": "Precision Simulator",
-        "subtitle": "Adjust consumption to size the photovoltaic system.",
-        "currentBill": "Current Monthly Bill",
+        "subtitle": "Adjust consumption to size your ideal photovoltaic system.",
+        "currentBill": "Monthly Bill",
         "sunHours": "Daily Sun Hours",
+        "sunHoursSummer": "Summer",
         "disclaimer": "Calculation based on annual average irradiation and pool price 0.20€/kWh.",
         "financialProjection": "Financial Projection (TCO)",
         "financingInstallment": "Financing Installment",
@@ -40,6 +49,22 @@
         "trees": "Equivalent Trees",
         "roi": "ROI Payback",
         "bookStudy": "Book Free Study",
+        "autarky": "Autarky",
+        "ai": {
+            "title": "Is this a good investment?",
+            "desc": "Let our AI analyze your consumption profile and explain the return on investment in simple language.",
+            "generate": "Generate Smart Report",
+            "analyzing": "Analyzing...",
+            "resultTitle": "Profitability Analysis",
+            "excellent": "Excellent",
+            "veryGood": "Very Good",
+            "good": "Good",
+            "summaryBase": "Based on your consumption of {{bill}}€ and {{sunHours}} sun hours, this {{size}}kWp system will practically eliminate your dependence on the electrical grid.",
+            "summaryROI": "With an ROI of {{roi}}% over 25 years, it is a superior financial investment to most index funds or real estate currently.",
+            "detailCashFlow": "Your solar payment ({{loan}}€) is less than your monthly savings ({{savings}}€). You have positive cash flow from day 1.",
+            "detailEnv": "You are avoiding {{co2}} tons of CO2 annually, equivalent to planting {{trees}} trees each year.",
+            "detailPayback": "The payback period is only {{years}} years, after which you will have almost free energy for more than 20 years."
+        },
         "months": "/mo",
         "years": "Years"
     },
@@ -49,7 +74,16 @@
         "desc": "Don't worry about installation. We work with the best experts in your area, audited by us.",
         "count": "+500 Installers",
         "rating": "Average Rating",
-        "viewProfile": "View Profile"
+        "viewProfile": "View Profile",
+        "viewAll": "View all installers"
+    },
+    "trust": {
+        "title": "Trust that generates <1>Energy</1>",
+        "subtitle": "Join more than 2,000 households that have already taken the step towards energy independence with SolarGen.",
+        "reviews": {
+            "basedOn": "based on +500 verified reviews",
+            "stars": "Excellence"
+        }
     },
     "dsm": {
         "badge": "DSM Technology 2026",

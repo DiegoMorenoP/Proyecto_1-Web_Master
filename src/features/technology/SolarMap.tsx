@@ -316,8 +316,8 @@ export function SolarMap() {
     return (
         <div
             ref={mapWrapperRef}
-            style={{ borderRadius: '50px', isolation: 'isolate' }}
-            className={`relative transition-all duration-500 ease-in-out bg-slate-900 overflow-hidden border border-white/10 shadow-2xl group ${isFullscreen ? 'w-full h-full rounded-none border-0' : 'w-full h-full rounded-[50px] z-0'}`}
+            style={{ isolation: 'isolate' }}
+            className={`relative transition-all duration-500 ease-in-out bg-slate-900 overflow-hidden border border-white/10 shadow-2xl group ${isFullscreen ? 'w-full h-full rounded-none border-0' : 'w-full h-full rounded-3xl lg:rounded-[40px] z-0'}`}
         >
 
             <MapContainer

@@ -1,10 +1,43 @@
-import { useState, useMemo } from 'react';
-import { Sun, Battery, ArrowRight, Leaf, TrendingUp, Info, Bot, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
+import { Sun, Battery, ArrowRight, Leaf, TrendingUp, Info, Bot, Sparkles, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => void }) => {
+    const { t } = useTranslation();
     const [bill, setBill] = useState(150);
     const [sunHours, setSunHours] = useState(5);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [report, setReport] = useState<{ verdict: string; summary: string; details: string[] } | null>(null);
+    const [hasGeneratedReport, setHasGeneratedReport] = useState(false);
+
+    const handleGenerateReport = async () => {
+        setIsGenerating(true);
+        setReport(null);
+
+        // Simulate AI Processing Delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // AI Logic Simulation based on 'data'
+        const verdict = data.paybackYears < 5 ? t('calculator.ai.excellent') : data.paybackYears < 8 ? t('calculator.ai.veryGood') : t('calculator.ai.good');
+
+        setReport({
+            verdict,
+            summary: `${t('calculator.ai.summaryBase', { bill, sunHours, size: data.systemSizeKw.toFixed(1) })} ${t('calculator.ai.summaryROI', { roi: Math.round(data.roi) })}`,
+            details: [
+                t('calculator.ai.detailCashFlow', { loan: Math.round(data.loanPayment), savings: Math.round(data.initialMonthlySavings) }),
+                t('calculator.ai.detailEnv', { co2: Math.round(data.annualCo2SavedKg / 1000), trees: Math.round(data.annualTrees) }),
+                t('calculator.ai.detailPayback', { years: data.paybackYears.toFixed(1) })
+            ]
+        });
+        setIsGenerating(false);
+        setHasGeneratedReport(true);
+    };
+
+    // Reset report status when inputs change
+    useEffect(() => {
+        setHasGeneratedReport(false);
+    }, [bill, sunHours]);
 
     // Constants for Spain (approximate)
     const ELECTRICITY_PRICE = 0.20; // €/kWh
@@ -70,8 +103,8 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                             <Sun className="w-8 h-8" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 id="calculator-title" className="text-2xl font-heading font-bold tracking-tight text-foreground">Simulador de Precisión</h2>
-                            <p className="text-muted-foreground text-sm">Ajusta el consumo para dimensionar tu sistema fotovoltaico ideal.</p>
+                            <h2 id="calculator-title" className="text-2xl font-heading font-bold tracking-tight text-foreground">{t('calculator.title')}</h2>
+                            <p className="text-muted-foreground text-sm">{t('calculator.subtitle')}</p>
                         </div>
                     </div>
                 </header>
@@ -82,7 +115,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                         {/* Bill Input */}
                         <div className="space-y-6">
                             <div className="flex justify-between items-end">
-                                <label htmlFor="bill-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Factura Mensual</label>
+                                <label htmlFor="bill-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t('calculator.currentBill')}</label>
                                 <span className="text-3xl font-mono font-bold text-primary">{bill}€</span>
                             </div>
                             <input
@@ -107,7 +140,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                         {/* Sun Hours Input */}
                         <div className="space-y-6 pt-6 border-t border-border/50">
                             <div className="flex justify-between items-end">
-                                <label htmlFor="sun-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Horas de Sol Diarias</label>
+                                <label htmlFor="sun-input" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t('calculator.sunHours')}</label>
                                 <span className="text-3xl font-mono font-bold text-primary">{sunHours}h</span>
                             </div>
                             <input
@@ -125,13 +158,13 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                             />
                             <div className="flex justify-between text-xs text-muted-foreground font-mono" aria-hidden="true">
                                 <span>3h</span>
-                                <span>10h (Verano)</span>
+                                <span>10h ({t('calculator.sunHoursSummer')})</span>
                             </div>
                         </div>
 
                         <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 text-blue-300 text-sm">
                             <Info className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                            <p>Cálculo basado en irradiación media anual y precio pool 0.20€/kWh.</p>
+                            <p>{t('calculator.disclaimer')}</p>
                         </div>
                     </div>
 
@@ -145,17 +178,17 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                             <div className="space-y-4 relative z-10 w-full md:w-auto">
                                 <div className="flex items-center gap-2 mb-2">
                                     <TrendingUp className="text-accent w-5 h-5" aria-hidden="true" />
-                                    <h3 className="font-bold text-lg text-foreground">Proyección Financiera (TCO)</h3>
+                                    <h3 className="font-bold text-lg text-foreground">{t('calculator.financialProjection')}</h3>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-12 py-4 border-y border-border/50">
                                     <div>
-                                        <p className="text-muted-foreground text-sm mb-1">Cuota Financiación</p>
-                                        <p className="text-2xl text-foreground font-mono font-bold">{Math.round(data.loanPayment)}€<span className="text-sm text-muted-foreground font-sans">/mes</span></p>
+                                        <p className="text-muted-foreground text-sm mb-1">{t('calculator.financingInstallment')}</p>
+                                        <p className="text-2xl text-foreground font-mono font-bold">{Math.round(data.loanPayment)}€<span className="text-sm text-muted-foreground font-sans">{t('calculator.months')}</span></p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-muted-foreground text-sm mb-1">Ahorro Estimado</p>
-                                        <p className="text-2xl text-accent font-mono font-bold">{Math.round(data.initialMonthlySavings)}€<span className="text-sm text-muted-foreground font-sans">/mes</span></p>
+                                        <p className="text-muted-foreground text-sm mb-1">{t('calculator.estimatedSavings')}</p>
+                                        <p className="text-2xl text-accent font-mono font-bold">{Math.round(data.initialMonthlySavings)}€<span className="text-sm text-muted-foreground font-sans">{t('calculator.months')}</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -167,7 +200,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
 
                                     <div className="text-center">
                                         <span className="block text-3xl font-bold text-foreground">92%</span>
-                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Autarquía</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('calculator.autarky')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -175,22 +208,22 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
 
                         {/* System Recommendation */}
                         <div className="bg-card/50 rounded-2xl p-6 border border-border/50 hover:border-primary/30 transition-colors">
-                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 block">Sistema Recomendado</span>
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 block">{t('calculator.recommendedSystem')}</span>
                             <div className="flex items-end gap-3 mb-2">
                                 <span className="text-5xl font-bold text-foreground tracking-tighter">{data.panelCount}</span>
-                                <span className="text-lg text-primary font-medium mb-1.5">Paneles Tier-1</span>
+                                <span className="text-lg text-primary font-medium mb-1.5">{t('calculator.tier1Panels')}</span>
                             </div>
-                            <p className="text-muted-foreground text-sm">Potencia total instalada: <span className="text-foreground font-mono">{data.systemSizeKw.toFixed(1)} kWp</span></p>
+                            <p className="text-muted-foreground text-sm">{t('calculator.installedPower')}: <span className="text-foreground font-mono">{data.systemSizeKw.toFixed(1)} kWp</span></p>
                         </div>
 
                         {/* Cash Flow */}
                         <div className="bg-accent/5 rounded-2xl p-6 border border-accent/20 hover:bg-accent/10 transition-colors">
-                            <span className="text-xs font-bold text-accent uppercase tracking-widest mb-4 block">Cash Flow Positivo</span>
+                            <span className="text-xs font-bold text-accent uppercase tracking-widest mb-4 block">{t('calculator.positiveCashFlow')}</span>
                             <div className="flex items-end gap-3 mb-2">
                                 <span className="text-5xl font-bold text-accent tracking-tighter">+{Math.round(data.netMonthlyBenefit)}€</span>
-                                <span className="text-lg text-accent/80 font-medium mb-1.5">/mes</span>
+                                <span className="text-lg text-accent/80 font-medium mb-1.5">{t('calculator.months')}</span>
                             </div>
-                            <p className="text-accent/80 text-sm">Ahorro neto desde el primer mes</p>
+                            <p className="text-accent/80 text-sm">{t('calculator.netSavings')}</p>
                         </div>
 
                         {/* Environmental Impact (Full Width) */}
@@ -201,7 +234,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold text-foreground">{(data.annualCo2SavedKg / 1000).toFixed(1)} Ton</p>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">CO2 Evitado / Año</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('calculator.co2Saved')}</p>
                                 </div>
                             </div>
                             <div className="w-px h-12 bg-border/50 hidden md:block" />
@@ -211,7 +244,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold text-foreground">{Math.round(data.annualTrees)}</p>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Árboles Equivalentes</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('calculator.trees')}</p>
                                 </div>
                             </div>
                             <div className="w-px h-12 bg-border/50 hidden md:block" />
@@ -220,8 +253,8 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                                     <Battery className="w-6 h-6" aria-hidden="true" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-foreground">{data.paybackYears.toFixed(1)} Años</p>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Retorno Inversión</p>
+                                    <p className="text-2xl font-bold text-foreground">{data.paybackYears.toFixed(1)} {t('calculator.years')}</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('calculator.roi')}</p>
                                 </div>
                             </div>
                         </div>
@@ -230,31 +263,78 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                 </div>
 
                 {/* AI REPORT SECTION */}
-                <div className="mt-8 bg-blue-500/5 border border-blue-500/10 rounded-2xl p-8 relative overflow-hidden">
+                <div className="mt-8 bg-blue-500/5 border border-blue-500/10 rounded-2xl p-8 relative overflow-hidden transition-all duration-500">
                     <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
                         <Bot className="w-32 h-32 text-blue-400" aria-hidden="true" />
                     </div>
 
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex-1 space-y-4">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
-                                <Sparkles className="w-3 h-3" aria-hidden="true" />
-                                Gemini Powered
+                    <div className="relative z-10">
+                        {/* Header Section */}
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-6">
+                            <div className="flex-1 space-y-4">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
+                                    <Sparkles className="w-3 h-3" aria-hidden="true" />
+                                    Gemini Powered
+                                </div>
+                                <h3 className="text-2xl font-heading font-bold text-foreground">{t('calculator.ai.title')}</h3>
+                                <p className="text-muted-foreground max-w-xl">
+                                    {t('calculator.ai.desc')}
+                                </p>
                             </div>
-                            <h3 className="text-2xl font-heading font-bold text-foreground">¿Es esta una buena inversión?</h3>
-                            <p className="text-muted-foreground max-w-xl">
-                                Deja que nuestra IA analice tu perfil de consumo y te explique el retorno de inversión en lenguaje sencillo.
-                            </p>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleGenerateReport}
+                                disabled={isGenerating || hasGeneratedReport}
+                                className="flex-shrink-0 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        {t('calculator.ai.analyzing')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Bot className="w-5 h-5" aria-hidden="true" />
+                                        {t('calculator.ai.generate')}
+                                    </>
+                                )}
+                            </motion.button>
                         </div>
 
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="flex-shrink-0 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                            <Bot className="w-5 h-5" aria-hidden="true" />
-                            Generar Informe Inteligente
-                        </motion.button>
+                        {/* Report Content */}
+                        <AnimatePresence>
+                            {report && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0, y: 20 }}
+                                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                                    exit={{ opacity: 0, height: 0, y: 20 }}
+                                    className="border-t border-blue-500/10 pt-6 mt-6"
+                                >
+                                    <div className="bg-background/40 backdrop-blur-md rounded-xl p-6 border border-blue-500/10">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-2 bg-blue-500/20 rounded-lg">
+                                                <TrendingUp className="w-5 h-5 text-blue-400" />
+                                            </div>
+                                            <h4 className="font-bold text-lg text-foreground">{t('calculator.ai.resultTitle')}: <span className={report.verdict === t('calculator.ai.excellent') ? 'text-emerald-400' : 'text-blue-400'}>{report.verdict}</span></h4>
+                                        </div>
+
+                                        <p className="text-slate-300 leading-relaxed mb-6">
+                                            {report.summary}
+                                        </p>
+
+                                        <div className="grid md:grid-cols-3 gap-4">
+                                            {report.details.map((detail, index) => (
+                                                <div key={index} className="bg-background/60 p-4 rounded-lg border border-white/5">
+                                                    <p className="text-sm text-slate-300">{detail}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
@@ -264,7 +344,7 @@ export const SolarCalculator = ({ onReserveClick }: { onReserveClick?: () => voi
                     onClick={onReserveClick}
                     className="mt-10 w-full py-4 bg-primary text-primary-foreground font-bold text-lg rounded-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
-                    Reservar Estudio Gratuito
+                    {t('calculator.bookStudy')}
                     <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </motion.button>
             </div>

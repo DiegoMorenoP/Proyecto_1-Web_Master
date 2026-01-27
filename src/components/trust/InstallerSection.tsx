@@ -134,7 +134,7 @@ export function InstallerSection() {
                             onClick={() => setIsListModalOpen(true)}
                             className="bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 group"
                         >
-                            Ver todos los instaladores
+                            {t('installers.viewAll')}
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>

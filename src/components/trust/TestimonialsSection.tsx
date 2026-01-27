@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Star, User, Quote, ArrowRight, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation, Trans } from 'react-i18next';
 import { TestimonialsModal, type Testimonial } from './TestimonialsModal';
 
 const TESTIMONIALS: Testimonial[] = [
@@ -55,6 +56,7 @@ const TESTIMONIALS: Testimonial[] = [
 ];
 
 export const TestimonialsSection = () => {
+    const { t } = useTranslation();
     const [visibleCount, setVisibleCount] = useState(3);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasExpandedOnce, setHasExpandedOnce] = useState(false);
@@ -71,10 +73,10 @@ export const TestimonialsSection = () => {
             <div className="container mx-auto px-4 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
-                        Confianza que genera <span className="text-primary">Energía</span>
+                        <Trans i18nKey="trust.title" components={{ 1: <span className="text-primary" /> }} />
                     </h2>
                     <p className="text-lg text-muted-foreground">
-                        Únete a más de 2.000 hogares que ya han dado el paso hacia la independencia energética con SolarGen.
+                        {t('trust.subtitle')}
                     </p>
                 </div>
 
@@ -129,7 +131,7 @@ export const TestimonialsSection = () => {
                             onClick={handleViewMore}
                             className="bg-white/5 hover:bg-white/10 text-white px-8 py-3 rounded-full font-medium transition-colors flex items-center gap-2 group"
                         >
-                            Ver más opiniones
+                            {t('common.showMore')}
                             <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
                         </button>
                     )}
@@ -144,7 +146,7 @@ export const TestimonialsSection = () => {
                                 <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                             ))}
                         </div>
-                        <span className="text-muted-foreground ml-2 text-sm group-hover:text-white transition-colors">basado en +500 reseñas verificadas</span>
+                        <span className="text-muted-foreground ml-2 text-sm group-hover:text-white transition-colors">{t('trust.reviews.basedOn')}</span>
                         <ArrowRight className="w-3 h-3 text-muted-foreground ml-1 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                 </div>

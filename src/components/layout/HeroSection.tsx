@@ -4,8 +4,12 @@ import { ArrowRight, ChevronDown, Play, Zap } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../common/Button';
 
+import { useState } from 'react';
+import { DemoVideoModal } from '../common/DemoVideoModal';
+
 export const HeroSection = ({ onScrollToSimulator }: { onScrollToSimulator: () => void }) => {
     const { t } = useTranslation();
+    const [isVideoOpen, setIsVideoOpen] = useState(false);
 
     return (
         <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
@@ -70,16 +74,17 @@ export const HeroSection = ({ onScrollToSimulator }: { onScrollToSimulator: () =
                             onClick={onScrollToSimulator}
                             className="w-full md:w-auto text-lg h-14 px-8 shadow-[0_0_40px_-10px_rgba(34,197,94,0.6)] hover:shadow-[0_0_60px_-10px_rgba(34,197,94,0.8)] transition-shadow duration-500"
                         >
-                            Simular Ahorro
+                            {t('hero.cta.simulate')}
                             <ArrowRight className="w-5 h-5 ml-2" />
                         </Button>
                         <Button
                             variant="outline"
                             size="lg"
+                            onClick={() => setIsVideoOpen(true)}
                             className="w-full md:w-auto text-lg h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-md"
                         >
                             <Play className="w-5 h-5 mr-2 fill-current" />
-                            Ver Video Demo
+                            {t('hero.cta.video')}
                         </Button>
                     </motion.div>
                 </div>
@@ -94,6 +99,12 @@ export const HeroSection = ({ onScrollToSimulator }: { onScrollToSimulator: () =
             >
                 <ChevronDown className="w-8 h-8 text-white/30" />
             </motion.div>
+
+            <DemoVideoModal
+                isOpen={isVideoOpen}
+                onClose={() => setIsVideoOpen(false)}
+                videoId="gREIBeiXgak"
+            />
         </section>
     );
 }

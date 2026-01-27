@@ -62,12 +62,13 @@ export function Catbot() {
 
     const hasInteracted = messages.some(m => m.sender === 'user');
 
-    const handleSendMessage = async () => {
-        if (!inputValue.trim()) return;
+    const handleSendMessage = async (text?: string) => {
+        const messageText = text || inputValue;
+        if (!messageText.trim()) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
-            text: inputValue,
+            text: messageText,
             sender: 'user',
             timestamp: new Date()
         };
@@ -282,6 +283,28 @@ export function Catbot() {
                                     </div>
                                 </div>
                             ))}
+
+                            {/* Quick Actions - Show only if last message is from bot and not typing */}
+                            {!isTyping && messages.length > 1 && messages[messages.length - 1].sender === 'bot' && (
+                                <div className="flex flex-col gap-2 mt-2 px-2">
+                                    <p className="text-xs text-slate-400 mb-1 ml-1">Opciones sugeridas:</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleSendMessage("Por favor, genera un informe detallado y un análisis de lo que hemos hablado.")}
+                                            className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs py-2 px-3 rounded-xl border border-primary/20 transition-colors text-left"
+                                        >
+                                            📊 Generar Informe
+                                        </button>
+                                        <button
+                                            onClick={() => handleSendMessage("Por favor, hazme preguntas clave para encontrar contingencias y mejorar mi plan.")}
+                                            className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs py-2 px-3 rounded-xl border border-primary/20 transition-colors text-left"
+                                        >
+                                            🤔 Profundizar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {isTyping && (
                                 <div className="flex gap-3">
                                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
@@ -311,7 +334,7 @@ export function Catbot() {
                                 />
                                 <Button
                                     size="sm"
-                                    onClick={handleSendMessage}
+                                    onClick={() => handleSendMessage()}
                                     disabled={!inputValue.trim() || isTyping}
                                     className="rounded-xl w-10 h-10 p-0"
                                 >

@@ -45,6 +45,7 @@ export const CatalogService = {
             .order('popularity_score', { ascending: false });
 
         if (error || !data || data.length === 0) {
+            console.error('CRITICAL DATABASE ERROR:', error);
             console.warn('Using mock data because DB is empty or unreachable');
             return MOCK_KITS;
         }

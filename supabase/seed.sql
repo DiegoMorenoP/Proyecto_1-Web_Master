@@ -43,22 +43,22 @@ WITH new_products AS (
 
 -- 3. KITS (Combinations) - ~15 items
 new_kits AS (
-    INSERT INTO "public"."kits" (name, type, total_power, price, monthly_finance_cost, description, image_url) VALUES
-    ('Starter Eco Kit (3kW)', 'grid', 3.0, 4500.00, 45.00, 'Ideal for small apartments or couples. Includes essential panels and efficient inverter.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80'),
-    ('Family Balance Kit (5kW)', 'grid', 5.0, 6800.00, 65.00, 'Perfect for standard families (3-4 people). Covers AC, laundry, and daily appliances.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80'),
-    ('Pro Autonomy Pack (8kW)', 'hybrid', 8.0, 12500.00, 120.00, 'Designed for large homes. Includes battery storage for night usage.', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80'),
-    ('Off-Grid Cabin Essential', 'isolated', 2.5, 5900.00, 58.00, 'Complete independence for remote locations. Heavy-duty batteries included.', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80'),
-    ('Enterprise Solution (15kW)', 'grid', 15.0, 18900.00, 190.00, 'High efficiency for small businesses or large villas.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80'),
-    ('Tesla Powerwall Bundle', 'hybrid', 6.0, 15500.00, 155.00, 'Premium Tesla backup solution with seamless grid integration.', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80'),
-    ('Budget Friendly 4kW', 'grid', 4.0, 5200.00, 55.00, 'Maximum value for money. Tier 1 panels with standard inverter.', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80'),
-    ('High Efficiency 6kW', 'grid', 6.0, 8900.00, 85.00, 'Uses high-efficiency Maxeon panels for limited roof spaces.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80'),
-    ('Hybrid Plus Storage', 'hybrid', 7.5, 13800.00, 135.00, '7.5kW hybrid system with 10kWh storage capacity.', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80'),
-    ('Micro-Inverter System', 'grid', 4.5, 7200.00, 72.00, 'Optimized performance for shaded roofs using micro-inverters.', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80'),
-    ('Ultimate Independence', 'isolated', 10.0, 22000.00, 250.00, 'Zero grid reliance. Massive storage and generation capacity.', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80'),
-    ('Urban Compact Kit', 'grid', 2.0, 3200.00, 35.00, 'Designed for city balconies and small terraced houses.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80'),
-    ('Smart Home Solar', 'hybrid', 5.0, 11000.00, 110.00, 'Integrated with smart home energy manager.', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80'),
-    ('Agricultural Pump Kit', 'isolated', 4.0, 6500.00, 65.00, 'Specialized for running water pumps in remote fields.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80'),
-    ('Weekend Cabin Kit', 'isolated', 1.5, 2500.00, 25.00, 'Small system for lighting and fridge during weekends.', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80')
+    INSERT INTO "public"."kits" (name, type, total_power, price, monthly_finance_cost, description, image_url, stock) VALUES
+    ('Starter Eco Kit (3kW)', 'grid', 3.0, 4500.00, 45.00, 'Ideal for small apartments or couples. Includes essential panels and efficient inverter.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80', 5),
+    ('Family Balance Kit (5kW)', 'grid', 5.0, 6800.00, 65.00, 'Perfect for standard families (3-4 people). Covers AC, laundry, and daily appliances.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 8),
+    ('Pro Autonomy Pack (8kW)', 'hybrid', 8.0, 12500.00, 120.00, 'Designed for large homes. Includes battery storage for night usage.', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80', 12),
+    ('Off-Grid Cabin Essential', 'isolated', 2.5, 5900.00, 58.00, 'Complete independence for remote locations. Heavy-duty batteries included.', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80', 3),
+    ('Enterprise Solution (15kW)', 'grid', 15.0, 18900.00, 190.00, 'High efficiency for small businesses or large villas.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80', 10),
+    ('Tesla Powerwall Bundle', 'hybrid', 6.0, 15500.00, 155.00, 'Premium Tesla backup solution with seamless grid integration.', 'https://images.unsplash.com/photo-1569024733183-40533e4b0930?auto=format&fit=crop&w=800&q=80', 4),
+    ('Budget Friendly 4kW', 'grid', 4.0, 5200.00, 55.00, 'Maximum value for money. Tier 1 panels with standard inverter.', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 15),
+    ('High Efficiency 6kW', 'grid', 6.0, 8900.00, 85.00, 'Uses high-efficiency Maxeon panels for limited roof spaces.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 6),
+    ('Hybrid Plus Storage', 'hybrid', 7.5, 13800.00, 135.00, '7.5kW hybrid system with 10kWh storage capacity.', 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=800&q=80', 7),
+    ('Micro-Inverter System', 'grid', 4.5, 7200.00, 72.00, 'Optimized performance for shaded roofs using micro-inverters.', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=800&q=80', 9),
+    ('Ultimate Independence', 'isolated', 10.0, 22000.00, 250.00, 'Zero grid reliance. Massive storage and generation capacity.', 'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?auto=format&fit=crop&w=800&q=80', 5),
+    ('Urban Compact Kit', 'grid', 2.0, 3200.00, 35.00, 'Designed for city balconies and small terraced houses.', 'https://images.unsplash.com/photo-1497436072909-60f360e1d4b0?auto=format&fit=crop&w=800&q=80', 11),
+    ('Smart Home Solar', 'hybrid', 5.0, 11000.00, 110.00, 'Integrated with smart home energy manager.', 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80', 8),
+    ('Agricultural Pump Kit', 'isolated', 4.0, 6500.00, 65.00, 'Specialized for running water pumps in remote fields.', 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80', 6),
+    ('Weekend Cabin Kit', 'isolated', 1.5, 2500.00, 25.00, 'Small system for lighting and fridge during weekends.', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80', 10)
 
     RETURNING id, name, price
 ),

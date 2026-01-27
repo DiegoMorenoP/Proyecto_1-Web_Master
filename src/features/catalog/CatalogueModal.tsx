@@ -211,12 +211,16 @@ export function CatalogueModal({ isOpen, onClose, kits }: CatalogueModalProps) {
                     />
 
                     {/* Modal Wrapper */}
-                    <div className="fixed inset-0 z-[10000] overflow-y-auto">
+                    <div
+                        className="fixed inset-0 z-[10000] overflow-y-auto"
+                        onClick={onClose}
+                    >
                         <div className="flex min-h-screen items-center justify-center p-4">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="relative w-full max-w-6xl bg-zinc-950 border border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
                             >
                                 {/* Header */}

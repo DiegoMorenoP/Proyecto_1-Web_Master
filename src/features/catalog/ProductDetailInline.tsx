@@ -62,9 +62,6 @@ export function ProductDetailInline({ product, onClose, onAddToCart }: ProductDe
                                     className={`w-full h-full object-cover ${isOutOfStock ? 'opacity-50 grayscale' : 'opacity-80'}`}
                                 />
                                 {isOutOfStock && <div className="absolute inset-0 bg-secondary/30 mix-blend-overlay" />}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Zap className="w-16 h-16 text-white/50" />
-                                </div>
                             </div>
                         )}
                     </div>

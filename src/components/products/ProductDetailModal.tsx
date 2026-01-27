@@ -66,9 +66,10 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
                                     <img
                                         src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80"
                                         alt="Solar Pattern"
-                                        className={`w-full h-full object-cover opacity-50 ${isOutOfStock ? 'grayscale' : ''}`}
+                                        referrerPolicy="no-referrer"
+                                        className={`w-full h-full object-cover ${isOutOfStock ? 'opacity-50 grayscale' : 'opacity-80'}`}
                                     />
-                                    <div className="absolute inset-0 bg-secondary/30 mix-blend-overlay" />
+                                    {isOutOfStock && <div className="absolute inset-0 bg-secondary/30 mix-blend-overlay" />}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <Zap className="w-24 h-24 text-white/50" />
                                     </div>

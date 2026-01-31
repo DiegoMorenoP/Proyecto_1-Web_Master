@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { Button } from '../common/Button';
 
 export function CartDrawer() {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useCart();
+    const { items, isOpen, toggleCart, removeItem, updateQuantity, subtotal, clearCart } = useCart();
 
     return (
         <AnimatePresence>
@@ -33,12 +33,24 @@ export function CartDrawer() {
                                 <ShoppingBag className="w-5 h-5 text-primary" />
                                 Tu Cesta
                             </h2>
-                            <button
-                                onClick={toggleCart}
-                                className="p-2 text-slate-400 hover:text-white transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+                            <div className="flex items-center gap-4">
+                                {items.length > 0 && (
+                                    <button
+                                        onClick={clearCart}
+                                        className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                        title="Vaciar todo"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Vaciar</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={toggleCart}
+                                    className="p-2 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">

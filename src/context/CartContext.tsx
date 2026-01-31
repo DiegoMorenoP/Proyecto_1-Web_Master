@@ -44,7 +44,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
             return [...current, { ...kit, quantity: 1 }];
         });
-        setIsOpen(true);
         // Toast removed as per user request
     };
 
